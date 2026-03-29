@@ -4,3 +4,8 @@ venv310/
 .idea/
 __pycache__/
 *.pyc
+venv310/
+.venv/
+**/site-packages/
+__pycache__/
+.idea/
