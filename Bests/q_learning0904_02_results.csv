@@ -1,0 +1,3 @@
+policy,avg_energy_import,avg_cost,energy_saving_vs_baseline,energy_saving_vs_baseline_pct,cost_saving_vs_baseline,cost_saving_vs_baseline_pct,stabilization_episode
+fixed_baseline,506.450986376247,119.27646572479804,0.0,0.0,0.0,0.0,
+q_learning,565.2379891974327,99.40550931902206,-58.78700282118575,-11.60763912058261,19.870956405775985,16.659578471769503,
