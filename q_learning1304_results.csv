@@ -1,0 +1,4 @@
+policy,reward_fn,avg_energy,avg_cost,energy_sav_%,cost_sav_%
+baseline_fixed_0,DefaultReward,521.3541540896733,106.80094709190283,0.0,0.0
+ql_a_default_reward,DefaultReward,561.3388924046451,117.50172609604698,-7.0033,-24.4898
+ql_b_solar_penalty,SolarPenaltyReward,552.3616073706152,103.6427920470875,-6.0144,3.4629

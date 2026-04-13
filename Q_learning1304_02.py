@@ -1,0 +1,755 @@
+#!/usr/bin/env python
+"""
+Q_learning1304_02.py
+===================
+
+Focused tabular Q-learning experiment for the assignment goal:
+learn battery control mainly from weather forecasts and occupancy proxy,
+and beat a fixed strategy in energy import.
+
+Important limitation
+--------------------
+CityLearn 2022 Phase 1 does not provide direct room occupancy observations.
+The script therefore uses `non_shiftable_load` as the occupancy/activity proxy.
+
+State design
+------------
+The state intentionally avoids electricity price so the policy is not dominated
+by cost arbitrage. Instead it uses:
+
+    (hour, solar_forecast_bin, temp_forecast_bin,
+     pv_surplus_flag, occupancy_bin, soc_bin)
+
+This is closer to the wording of the assignment than the previous variants.
+"""
+
+from __future__ import annotations
+
+import copy
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
+import citylearn
+from citylearn.citylearn import CityLearnEnv
+
+
+DATASET_NAME = "citylearn_challenge_2022_phase_1"
+OUTPUT_PREFIX = "q_learning1304_02"
+RANDOM_SEED = 42
+
+FAST_MODE = True
+
+if FAST_MODE:
+    EPISODE_TIME_STEPS = 24 * 7
+    TRAIN_EPISODES = 360
+    VALIDATION_EPISODES = 12
+    EVAL_EPISODES = 52
+    EVAL_EVERY = 18
+else:
+    EPISODE_TIME_STEPS = 24 * 7
+    TRAIN_EPISODES = 700
+    VALIDATION_EPISODES = 12
+    EVAL_EPISODES = 52
+    EVAL_EVERY = 20
+
+ALPHA_START = 0.18
+ALPHA_END = 0.04
+GAMMA = 0.985
+EPSILON_START = 1.0
+EPSILON_END = 0.03
+
+SOC_EMPTY_THRESH = 0.05
+SOC_FULL_THRESH = 0.95
+
+SOC_BINS = np.array([0.15, 0.40, 0.70, 0.90], dtype=np.float32)
+SOLAR_FALLBACK = np.array([120.0, 500.0, 950.0], dtype=np.float32)
+TEMP_FALLBACK = np.array([10.0, 18.0, 26.0], dtype=np.float32)
+LOAD_FALLBACK = np.array([0.65, 1.60], dtype=np.float32)
+
+StateT = Tuple[int, int, int, int, int, int]
+
+
+def set_seed(seed: int) -> None:
+    np.random.seed(seed)
+
+
+def resolve_schema(dataset_name: str) -> str:
+    localapp = os.environ.get("LOCALAPPDATA", "")
+    cached = (
+        Path(localapp)
+        / "intelligent-environments-lab"
+        / "citylearn"
+        / "Cache"
+        / f"v{citylearn.__version__}"
+        / "datasets"
+        / dataset_name
+        / "schema.json"
+    )
+    return str(cached) if cached.exists() else dataset_name
+
+
+def make_env(random_seed: int, random_episode_split: bool) -> CityLearnEnv:
+    return CityLearnEnv(
+        schema=resolve_schema(DATASET_NAME),
+        central_agent=False,
+        episode_time_steps=EPISODE_TIME_STEPS,
+        random_episode_split=random_episode_split,
+        random_seed=random_seed,
+    )
+
+
+def get_obs_index(env: CityLearnEnv) -> Dict[str, int]:
+    return {name: i for i, name in enumerate(env.observation_names[0])}
+
+
+def first_key(idx: Dict[str, int], candidates: List[str]) -> Optional[str]:
+    for key in candidates:
+        if key in idx:
+            return key
+    return None
+
+
+def quantile_bins(values: List[float], n: int, fallback: np.ndarray) -> np.ndarray:
+    arr = np.asarray([v for v in values if np.isfinite(v)], dtype=np.float32)
+    if arr.size < max(20, n * 3):
+        return fallback
+    qs = np.linspace(0.0, 1.0, n + 1)[1:-1]
+    bins = np.unique(np.quantile(arr, qs))
+    return bins.astype(np.float32) if bins.size > 0 else fallback
+
+
+def dig(value: float, bins: np.ndarray) -> int:
+    safe_value = value if np.isfinite(value) else 0.0
+    return int(np.digitize(safe_value, bins, right=False))
+
+
+def moving_average(values: List[float], window: int = 20) -> np.ndarray:
+    arr = np.asarray(values, dtype=np.float32)
+    if window <= 1 or arr.size == 0:
+        return arr
+    return np.convolve(arr, np.ones(window, dtype=np.float32) / window, mode="same")
+
+
+def safe_pct(base: float, value: float, cap: float = 500.0) -> Optional[float]:
+    if base <= 1e-6:
+        return None
+    return float(np.clip(100.0 * (base - value) / base, -cap, cap))
+
+
+def district_grid_import(env: CityLearnEnv) -> float:
+    if not env.net_electricity_consumption:
+        return 0.0
+    return max(0.0, float(env.net_electricity_consumption[-1]))
+
+
+def district_cost(env: CityLearnEnv) -> float:
+    if hasattr(env, "net_electricity_consumption_cost") and env.net_electricity_consumption_cost:
+        return float(env.net_electricity_consumption_cost[-1])
+    return 0.0
+
+
+def format_bins(bins: np.ndarray) -> str:
+    return "[" + ", ".join(f"{x:.3g}" for x in bins) + "]"
+
+
+def summarize_values(values: List[float]) -> str:
+    if not values:
+        return "-"
+    arr = np.asarray(values, dtype=np.float32)
+    return f"min={arr.min():.3g}  mean={arr.mean():.3g}  max={arr.max():.3g}  (n={arr.size})"
+
+
+class BinSet:
+    def __init__(self, env: CityLearnEnv) -> None:
+        idx = get_obs_index(env)
+
+        self.k_hour = first_key(idx, ["hour"])
+        self.k_load = first_key(idx, ["non_shiftable_load"])
+        self.k_soc = first_key(idx, ["electrical_storage_soc"])
+        self.k_net = first_key(idx, ["net_electricity_consumption"])
+        self.k_solar_gen = first_key(idx, ["solar_generation"])
+        self.k_temp_6h = first_key(idx, ["outdoor_dry_bulb_temperature_predicted_6h", "outdoor_dry_bulb_temperature_predicted_1"])
+        self.k_temp_12h = first_key(idx, ["outdoor_dry_bulb_temperature_predicted_12h", "outdoor_dry_bulb_temperature_predicted_2"])
+        self.k_diff_6h = first_key(idx, ["diffuse_solar_irradiance_predicted_6h", "diffuse_solar_irradiance_predicted_1"])
+        self.k_dir_6h = first_key(idx, ["direct_solar_irradiance_predicted_6h", "direct_solar_irradiance_predicted_1"])
+        self.k_diff_12h = first_key(idx, ["diffuse_solar_irradiance_predicted_12h", "diffuse_solar_irradiance_predicted_2"])
+        self.k_dir_12h = first_key(idx, ["direct_solar_irradiance_predicted_12h", "direct_solar_irradiance_predicted_2"])
+
+        self.i_hour = idx[self.k_hour] if self.k_hour else None
+        self.i_load = idx[self.k_load] if self.k_load else None
+        self.i_soc = idx[self.k_soc] if self.k_soc else None
+        self.i_net = idx[self.k_net] if self.k_net else None
+        self.i_solar_gen = idx[self.k_solar_gen] if self.k_solar_gen else None
+        self.i_temp_6h = idx[self.k_temp_6h] if self.k_temp_6h else None
+        self.i_temp_12h = idx[self.k_temp_12h] if self.k_temp_12h else None
+        self.i_diff_6h = idx[self.k_diff_6h] if self.k_diff_6h else None
+        self.i_dir_6h = idx[self.k_dir_6h] if self.k_dir_6h else None
+        self.i_diff_12h = idx[self.k_diff_12h] if self.k_diff_12h else None
+        self.i_dir_12h = idx[self.k_dir_12h] if self.k_dir_12h else None
+
+        self.solar_bins: np.ndarray = SOLAR_FALLBACK
+        self.temp_bins: np.ndarray = TEMP_FALLBACK
+        self.load_bins: np.ndarray = LOAD_FALLBACK
+        self.soc_bins: np.ndarray = SOC_BINS
+
+        self._solar_samples: List[float] = []
+        self._temp_samples: List[float] = []
+        self._load_samples: List[float] = []
+
+    def solar_forecast(self, obs: List[float]) -> float:
+        candidates: List[float] = []
+
+        def add_pair(i_diff: Optional[int], i_dir: Optional[int]) -> None:
+            total = 0.0
+            used = False
+            if i_diff is not None:
+                total += float(obs[i_diff])
+                used = True
+            if i_dir is not None:
+                total += float(obs[i_dir])
+                used = True
+            if used:
+                candidates.append(total)
+
+        add_pair(self.i_diff_6h, self.i_dir_6h)
+        add_pair(self.i_diff_12h, self.i_dir_12h)
+
+        if not candidates and self.i_solar_gen is not None:
+            candidates.append(max(0.0, float(obs[self.i_solar_gen])) * 250.0)
+
+        return max(candidates) if candidates else 0.0
+
+    def temperature_forecast(self, obs: List[float]) -> float:
+        values: List[float] = []
+        for i_temp in [self.i_temp_6h, self.i_temp_12h]:
+            if i_temp is not None:
+                values.append(float(obs[i_temp]))
+        return float(np.mean(values)) if values else 20.0
+
+    def pv_surplus_flag(self, obs: List[float]) -> int:
+        load = float(obs[self.i_load]) if self.i_load is not None else 0.0
+        solar = float(obs[self.i_solar_gen]) if self.i_solar_gen is not None else 0.0
+        return int(solar > load + 0.1)
+
+    def fit(self, env: CityLearnEnv, episodes: int = 6) -> None:
+        solar_values: List[float] = []
+        temp_values: List[float] = []
+        load_values: List[float] = []
+
+        for _ in range(episodes):
+            obs_list = env.reset()
+            for _ in range(EPISODE_TIME_STEPS):
+                for obs in obs_list:
+                    solar_values.append(self.solar_forecast(obs))
+                    temp_values.append(self.temperature_forecast(obs))
+                    if self.i_load is not None:
+                        load_values.append(float(obs[self.i_load]))
+                obs_list, _, done, _ = env.step([[0.0] for _ in env.buildings])
+                if done:
+                    break
+
+        self._solar_samples = solar_values
+        self._temp_samples = temp_values
+        self._load_samples = load_values
+        self.solar_bins = quantile_bins(solar_values, 4, SOLAR_FALLBACK)
+        self.temp_bins = quantile_bins(temp_values, 4, TEMP_FALLBACK)
+        self.load_bins = quantile_bins(load_values, 3, LOAD_FALLBACK)
+
+    def encode(self, obs: List[float], soc: float) -> StateT:
+        hour = int(np.clip((int(round(float(obs[self.i_hour]))) - 1) if self.i_hour is not None else 0, 0, 23))
+        return (
+            hour,
+            dig(self.solar_forecast(obs), self.solar_bins),
+            dig(self.temperature_forecast(obs), self.temp_bins),
+            self.pv_surplus_flag(obs),
+            dig(float(obs[self.i_load]) if self.i_load is not None else 0.0, self.load_bins),
+            dig(soc, self.soc_bins),
+        )
+
+    def print_summary(self) -> None:
+        sep = "-" * 92
+        print(f"\n    {sep}")
+        print(f"    {'Feature':<18}  {'Source':<42}  Summary")
+        print(f"    {sep}")
+        print(f"    {'hour':<18}  {str(self.k_hour):<42}  24 exact hours")
+        print(f"    {'solar forecast':<18}  6h/12h irradiance forecasts{'':<15}  {summarize_values(self._solar_samples)}")
+        print(f"    {'':<18}  {'':<42}  bins: {format_bins(self.solar_bins)}")
+        print(f"    {'temp forecast':<18}  {str(self.k_temp_6h)} / {str(self.k_temp_12h):<20}  {summarize_values(self._temp_samples)}")
+        print(f"    {'':<18}  {'':<42}  bins: {format_bins(self.temp_bins)}")
+        print(f"    {'occupancy proxy':<18}  {str(self.k_load):<42}  {summarize_values(self._load_samples)}")
+        print(f"    {'':<18}  {'':<42}  bins: {format_bins(self.load_bins)}")
+        print(f"    {'pv surplus flag':<18}  {str(self.k_solar_gen):<42}  0=no, 1=current solar > load")
+        print(f"    {'battery soc':<18}  {str(self.k_soc):<42}  bins: {format_bins(self.soc_bins)}")
+        print(f"    {sep}")
+        state_count = 24 * (len(self.solar_bins) + 1) * (len(self.temp_bins) + 1) * 2 * (len(self.load_bins) + 1) * (len(self.soc_bins) + 1)
+        print(f"    State space: 24 x {len(self.solar_bins)+1} x {len(self.temp_bins)+1} x 2 x {len(self.load_bins)+1} x {len(self.soc_bins)+1} = {state_count:,}")
+        print("    Direct occupancy is unavailable; non_shiftable_load is used as occupancy proxy.\n")
+
+
+class SharedTabularQAgent:
+    def __init__(self, action_levels: np.ndarray) -> None:
+        self.action_levels = action_levels.astype(np.float32)
+        self.q_table: Dict[StateT, np.ndarray] = {}
+        self.alpha = ALPHA_START
+        self.epsilon = EPSILON_START
+
+    def _q(self, state: StateT) -> np.ndarray:
+        q = self.q_table.get(state)
+        if q is None:
+            q = np.zeros((len(self.action_levels),), dtype=np.float32)
+            self.q_table[state] = q
+        return q
+
+    def valid_action_ids(self, soc: float) -> List[int]:
+        valid: List[int] = []
+        for i, value in enumerate(self.action_levels):
+            if soc <= SOC_EMPTY_THRESH and value < 0.0:
+                continue
+            if soc >= SOC_FULL_THRESH and value > 0.0:
+                continue
+            valid.append(i)
+        return valid or [int(np.argmin(np.abs(self.action_levels)))]
+
+    def set_schedules(self, episode: int, total_episodes: int) -> None:
+        progress = float(episode) / max(1, total_episodes - 1)
+        self.alpha = float(ALPHA_END + (ALPHA_START - ALPHA_END) * (1.0 - progress))
+        self.epsilon = float(EPSILON_END + (EPSILON_START - EPSILON_END) * np.exp(-5.0 * progress))
+
+    def act(self, state: StateT, soc: float, training: bool) -> int:
+        valid = self.valid_action_ids(soc)
+        if training and np.random.rand() < self.epsilon:
+            return int(np.random.choice(valid))
+        q = self._q(state)
+        return int(max(valid, key=lambda action_id: q[action_id]))
+
+    def update(self, state: StateT, action_id: int, reward: float, next_state: StateT, next_soc: float, done: bool) -> None:
+        q = self._q(state)
+        next_q = self._q(next_state)
+        next_valid = self.valid_action_ids(next_soc)
+        best_next = float(max(next_q[i] for i in next_valid))
+        target = float(reward) + (0.0 if done else GAMMA * best_next)
+        q[action_id] = (1.0 - self.alpha) * q[action_id] + self.alpha * target
+
+    @property
+    def total_states(self) -> int:
+        return len(self.q_table)
+
+
+@dataclass
+class EvalMetrics:
+    avg_energy_import: float
+    avg_cost: float
+    episode_energies: List[float]
+    episode_costs: List[float]
+
+
+def build_actions_from_values(values: List[float]) -> List[List[float]]:
+    return [[float(value)] for value in values]
+
+
+def compute_energy_reward(prev_obs: List[float], building, bins: BinSet, action_value: float, action_max_abs: float) -> float:
+    net_import = max(0.0, float(building.net_electricity_consumption[-1]))
+    net_wo_storage = float(building.net_electricity_consumption_without_storage[-1])
+    import_wo_storage = max(0.0, net_wo_storage)
+    export_wo_storage = max(0.0, -net_wo_storage)
+    storage_electricity = float(building.electrical_storage_electricity_consumption[-1])
+    storage_charge = max(0.0, storage_electricity)
+    storage_discharge = max(0.0, -storage_electricity)
+    load = float(prev_obs[bins.i_load]) if bins.i_load is not None else 0.0
+    solar = max(0.0, float(prev_obs[bins.i_solar_gen])) if bins.i_solar_gen is not None else 0.0
+    pv_surplus = solar > load + 0.1
+
+    action_scale = abs(action_value) / max(1e-6, action_max_abs)
+    pv_capture = min(storage_charge, export_wo_storage)
+    harmful_grid_charge = max(0.0, storage_charge - export_wo_storage)
+    import_reduction = max(0.0, import_wo_storage - net_import)
+
+    reward = -(1.35 * net_import + 0.05 * action_scale + 0.14 * harmful_grid_charge)
+    reward += 0.70 * pv_capture
+    reward += 0.30 * import_reduction
+
+    if pv_surplus and storage_charge > 0.0:
+        reward += 0.10
+    if export_wo_storage > 0.05 and storage_discharge > 0.0:
+        reward -= 0.08
+    if harmful_grid_charge > 0.05:
+        reward -= 0.35 * harmful_grid_charge
+
+    return float(reward)
+
+
+def energy_score_against_fixed(fixed: EvalMetrics, other: EvalMetrics) -> float:
+    energy_pct = safe_pct(fixed.avg_energy_import, other.avg_energy_import) or -500.0
+    cost_pct = safe_pct(fixed.avg_cost, other.avg_cost) or -500.0
+    return 0.90 * energy_pct + 0.10 * cost_pct
+
+
+def heuristic_action_value(obs: List[float], bins: BinSet, action_low: float, action_high: float) -> float:
+    soc = float(obs[bins.i_soc]) if bins.i_soc is not None else 0.0
+    load = float(obs[bins.i_load]) if bins.i_load is not None else 0.0
+    solar = max(0.0, float(obs[bins.i_solar_gen])) if bins.i_solar_gen is not None else 0.0
+    net = float(obs[bins.i_net]) if bins.i_net is not None else max(0.0, load - solar)
+
+    if solar > load + 0.15 and soc < 0.92:
+        return 0.5 * action_high
+    if net < -0.10 and soc < 0.95:
+        return action_high
+    if net > 1.40 and soc > 0.12:
+        return 0.5 * action_low
+    return 0.0
+
+
+def evaluate_fixed_policy(value: float, episodes: int) -> EvalMetrics:
+    env = make_env(random_seed=RANDOM_SEED, random_episode_split=False)
+    ep_energies: List[float] = []
+    ep_costs: List[float] = []
+
+    for _ in range(episodes):
+        env.reset()
+        ep_energy = 0.0
+        ep_cost = 0.0
+        for _ in range(EPISODE_TIME_STEPS):
+            _, _, done, _ = env.step([[value] for _ in env.buildings])
+            ep_energy += district_grid_import(env)
+            ep_cost += district_cost(env)
+            if done:
+                break
+        ep_energies.append(ep_energy)
+        ep_costs.append(ep_cost)
+
+    return EvalMetrics(
+        avg_energy_import=float(np.mean(ep_energies)),
+        avg_cost=float(np.mean(ep_costs)),
+        episode_energies=ep_energies,
+        episode_costs=ep_costs,
+    )
+
+
+def evaluate_heuristic_policy(episodes: int, bins: BinSet, action_low: float, action_high: float) -> EvalMetrics:
+    env = make_env(random_seed=RANDOM_SEED, random_episode_split=False)
+    ep_energies: List[float] = []
+    ep_costs: List[float] = []
+
+    for _ in range(episodes):
+        obs_list = env.reset()
+        ep_energy = 0.0
+        ep_cost = 0.0
+        for _ in range(EPISODE_TIME_STEPS):
+            actions = build_actions_from_values([heuristic_action_value(obs, bins, action_low, action_high) for obs in obs_list])
+            obs_list, _, done, _ = env.step(actions)
+            ep_energy += district_grid_import(env)
+            ep_cost += district_cost(env)
+            if done:
+                break
+        ep_energies.append(ep_energy)
+        ep_costs.append(ep_cost)
+
+    return EvalMetrics(
+        avg_energy_import=float(np.mean(ep_energies)),
+        avg_cost=float(np.mean(ep_costs)),
+        episode_energies=ep_energies,
+        episode_costs=ep_costs,
+    )
+
+
+def evaluate_agent(agent: SharedTabularQAgent, bins: BinSet, episodes: int) -> EvalMetrics:
+    env = make_env(random_seed=RANDOM_SEED, random_episode_split=False)
+    ep_energies: List[float] = []
+    ep_costs: List[float] = []
+
+    for _ in range(episodes):
+        obs_list = env.reset()
+        socs = [float(obs[bins.i_soc]) if bins.i_soc is not None else 0.0 for obs in obs_list]
+        states = [bins.encode(obs, soc) for obs, soc in zip(obs_list, socs)]
+        ep_energy = 0.0
+        ep_cost = 0.0
+
+        for _ in range(EPISODE_TIME_STEPS):
+            action_ids = [agent.act(state, soc, training=False) for state, soc in zip(states, socs)]
+            action_values = [float(agent.action_levels[action_id]) for action_id in action_ids]
+            obs_list, _, done, _ = env.step(build_actions_from_values(action_values))
+            ep_energy += district_grid_import(env)
+            ep_cost += district_cost(env)
+
+            socs = [float(obs[bins.i_soc]) if bins.i_soc is not None else 0.0 for obs in obs_list]
+            states = [bins.encode(obs, soc) for obs, soc in zip(obs_list, socs)]
+            if done:
+                break
+
+        ep_energies.append(ep_energy)
+        ep_costs.append(ep_cost)
+
+    return EvalMetrics(
+        avg_energy_import=float(np.mean(ep_energies)),
+        avg_cost=float(np.mean(ep_costs)),
+        episode_energies=ep_energies,
+        episode_costs=ep_costs,
+    )
+
+
+def train_agent(bins: BinSet, action_levels: np.ndarray, validation_baseline: EvalMetrics) -> tuple[SharedTabularQAgent, List[float], List[float], List[float], List[Tuple[int, float]]]:
+    train_env = make_env(random_seed=RANDOM_SEED, random_episode_split=True)
+    agent = SharedTabularQAgent(action_levels)
+    action_max_abs = float(np.max(np.abs(action_levels)))
+
+    best_score = -float("inf")
+    best_q_table: Dict[StateT, np.ndarray] = {}
+    train_rewards: List[float] = []
+    train_energy: List[float] = []
+    train_cost: List[float] = []
+    validation_history: List[Tuple[int, float]] = []
+
+    for episode in tqdm(range(TRAIN_EPISODES), desc="Train energy-weather-occ"):
+        agent.set_schedules(episode, TRAIN_EPISODES)
+        obs_list = train_env.reset()
+        socs = [float(obs[bins.i_soc]) if bins.i_soc is not None else 0.0 for obs in obs_list]
+        states = [bins.encode(obs, soc) for obs, soc in zip(obs_list, socs)]
+
+        episode_reward = 0.0
+        episode_energy = 0.0
+        episode_cost = 0.0
+
+        for _ in range(EPISODE_TIME_STEPS):
+            action_ids = [agent.act(state, soc, training=True) for state, soc in zip(states, socs)]
+            action_values = [float(action_levels[action_id]) for action_id in action_ids]
+            next_obs_list, _, done, _ = train_env.step(build_actions_from_values(action_values))
+            next_socs = [float(obs[bins.i_soc]) if bins.i_soc is not None else 0.0 for obs in next_obs_list]
+            next_states = [bins.encode(obs, soc) for obs, soc in zip(next_obs_list, next_socs)]
+
+            local_rewards = [
+                compute_energy_reward(obs_list[i], train_env.buildings[i], bins, action_values[i], action_max_abs)
+                for i in range(len(train_env.buildings))
+            ]
+
+            for state, action_id, reward, next_state, next_soc in zip(states, action_ids, local_rewards, next_states, next_socs):
+                agent.update(state, action_id, reward, next_state, next_soc, done)
+
+            episode_reward += float(np.sum(local_rewards))
+            episode_energy += district_grid_import(train_env)
+            episode_cost += district_cost(train_env)
+
+            states = next_states
+            socs = next_socs
+            obs_list = next_obs_list
+            if done:
+                break
+
+        train_rewards.append(episode_reward)
+        train_energy.append(episode_energy)
+        train_cost.append(episode_cost)
+
+        if (episode + 1) % EVAL_EVERY == 0 or episode == TRAIN_EPISODES - 1:
+            validation_metrics = evaluate_agent(agent, bins, VALIDATION_EPISODES)
+            validation_score = energy_score_against_fixed(validation_baseline, validation_metrics)
+            validation_history.append((episode + 1, validation_score))
+            if validation_score > best_score:
+                best_score = validation_score
+                best_q_table = copy.deepcopy(agent.q_table)
+
+    if best_q_table:
+        agent.q_table = best_q_table
+
+    return agent, train_rewards, train_energy, train_cost, validation_history
+
+
+def plot_training(train_rewards: List[float], train_energy: List[float], train_cost: List[float], validation_history: List[Tuple[int, float]]) -> None:
+    fig, axes = plt.subplots(2, 2, figsize=(14, 9))
+    fig.suptitle(
+        "Q_learning1304_02 - Weather forecast + occupancy proxy + single energy reward",
+        fontsize=11,
+        fontweight="bold",
+    )
+
+    axes[0, 0].plot(train_rewards, alpha=0.25, linewidth=0.8, color="steelblue")
+    axes[0, 0].plot(moving_average(train_rewards, 20), linewidth=2, color="navy")
+    axes[0, 0].set_title("Training reward")
+
+    axes[0, 1].plot(train_energy, alpha=0.25, linewidth=0.8, color="teal")
+    axes[0, 1].plot(moving_average(train_energy, 20), linewidth=2, color="darkslategray")
+    axes[0, 1].set_title("Training district import")
+
+    axes[1, 0].plot(train_cost, alpha=0.25, linewidth=0.8, color="darkorange")
+    axes[1, 0].plot(moving_average(train_cost, 20), linewidth=2, color="saddlebrown")
+    axes[1, 0].set_title("Training district cost")
+
+    xs = [x for x, _ in validation_history]
+    ys = [y for _, y in validation_history]
+    axes[1, 1].plot(xs, ys, marker="o", linewidth=2, color="crimson")
+    axes[1, 1].axhline(0.0, color="black", linewidth=0.8)
+    axes[1, 1].set_title("Validation score vs fixed baseline")
+
+    for ax in axes.ravel():
+        ax.set_xlabel("Episode")
+        ax.grid(True, alpha=0.25)
+
+    axes[0, 0].set_ylabel("reward")
+    axes[0, 1].set_ylabel("kWh")
+    axes[1, 0].set_ylabel("$")
+    axes[1, 1].set_ylabel("score")
+
+    plt.tight_layout()
+    plt.savefig(f"{OUTPUT_PREFIX}_training.png", dpi=130, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_eval_summary(summary_df: pd.DataFrame) -> None:
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig.suptitle("Q_learning1304_02 - Evaluation vs fixed baseline", fontsize=11, fontweight="bold")
+
+    plot_df = summary_df[summary_df["policy"] != "fixed_baseline"].copy()
+
+    axes[0].bar(plot_df["policy"], plot_df["energy_sav_%"], color=["darkorange", "steelblue"], alpha=0.88)
+    axes[0].axhline(0.0, color="black", linewidth=0.8)
+    axes[0].set_title("Energy savings")
+    axes[0].set_ylabel("%")
+    axes[0].tick_params(axis="x", rotation=20)
+    axes[0].grid(True, alpha=0.25, axis="y")
+
+    axes[1].bar(plot_df["policy"], plot_df["cost_sav_%"], color=["darkorange", "steelblue"], alpha=0.88)
+    axes[1].axhline(0.0, color="black", linewidth=0.8)
+    axes[1].set_title("Cost savings")
+    axes[1].set_ylabel("%")
+    axes[1].tick_params(axis="x", rotation=20)
+    axes[1].grid(True, alpha=0.25, axis="y")
+
+    plt.tight_layout()
+    plt.savefig(f"{OUTPUT_PREFIX}_eval_summary.png", dpi=130, bbox_inches="tight")
+    plt.close(fig)
+
+
+def main() -> None:
+    set_seed(RANDOM_SEED)
+    sep = "=" * 84
+
+    print(sep)
+    print("  Q_learning1304_02 - Single reward focused on weather forecasts and occupancy proxy")
+    print("  Objective: beat fixed baseline in energy import, not optimize price arbitrage")
+    print(sep)
+    print(f"  citylearn version    : {citylearn.__version__}")
+    print(f"  dataset              : {DATASET_NAME}")
+    print(f"  episode_time_steps   : {EPISODE_TIME_STEPS} ({EPISODE_TIME_STEPS // 24} days)")
+    print(f"  train_episodes       : {TRAIN_EPISODES}")
+    print(f"  validation_episodes  : {VALIDATION_EPISODES}")
+    print(f"  eval_episodes        : {EVAL_EPISODES}")
+    print("  reward               : energy_pv_only")
+    print("  state                : hour + solar forecast + temperature forecast + occupancy proxy + pv surplus + soc")
+
+    print("\n[1/5] Inspect environment and state bins...")
+    probe_env = make_env(random_seed=RANDOM_SEED, random_episode_split=True)
+    bins = BinSet(probe_env)
+    bins.fit(probe_env)
+    bins.print_summary()
+
+    action_low = float(probe_env.action_space[0].low[0])
+    action_high = float(probe_env.action_space[0].high[0])
+    action_max_abs = min(abs(action_low), abs(action_high))
+    action_levels = np.array([-1.0, -0.5, 0.0, 0.25, 0.5, 1.0], dtype=np.float32) * action_max_abs
+    print(f"  action bounds        : [{action_low:.6f}, {action_high:.6f}]")
+    print(f"  discrete actions     : {action_levels.tolist()}")
+
+    print("\n[2/5] Fixed and heuristic baselines...")
+    fixed_baseline = evaluate_fixed_policy(0.0, EVAL_EPISODES)
+    validation_baseline = evaluate_fixed_policy(0.0, VALIDATION_EPISODES)
+    heuristic_baseline = evaluate_heuristic_policy(EVAL_EPISODES, bins, action_low, action_high)
+    print(f"  fixed baseline       : energy={fixed_baseline.avg_energy_import:.4f} kWh, cost={fixed_baseline.avg_cost:.4f} $")
+    print(f"  heuristic pv rule    : energy={heuristic_baseline.avg_energy_import:.4f} kWh, cost={heuristic_baseline.avg_cost:.4f} $")
+
+    print("\n[3/5] Train single focused Q-learning agent...")
+    agent, train_rewards, train_energy, train_cost, validation_history = train_agent(bins, action_levels, validation_baseline)
+    q_metrics = evaluate_agent(agent, bins, EVAL_EPISODES)
+    q_score = energy_score_against_fixed(fixed_baseline, q_metrics)
+    print(f"  q_learning focused   : energy={q_metrics.avg_energy_import:.4f} kWh, cost={q_metrics.avg_cost:.4f} $")
+    print(f"  score vs fixed       : {q_score:+.4f}")
+    print(f"  visited states       : {agent.total_states}")
+
+    print("\n[4/5] Save results and plots...")
+    summary_df = pd.DataFrame([
+        {
+            "policy": "fixed_baseline",
+            "avg_energy_import": fixed_baseline.avg_energy_import,
+            "avg_cost": fixed_baseline.avg_cost,
+            "energy_sav": 0.0,
+            "energy_sav_%": 0.0,
+            "cost_sav": 0.0,
+            "cost_sav_%": 0.0,
+            "score_vs_fixed": 0.0,
+        },
+        {
+            "policy": "heuristic_pv_rule",
+            "avg_energy_import": heuristic_baseline.avg_energy_import,
+            "avg_cost": heuristic_baseline.avg_cost,
+            "energy_sav": fixed_baseline.avg_energy_import - heuristic_baseline.avg_energy_import,
+            "energy_sav_%": safe_pct(fixed_baseline.avg_energy_import, heuristic_baseline.avg_energy_import),
+            "cost_sav": fixed_baseline.avg_cost - heuristic_baseline.avg_cost,
+            "cost_sav_%": safe_pct(fixed_baseline.avg_cost, heuristic_baseline.avg_cost),
+            "score_vs_fixed": energy_score_against_fixed(fixed_baseline, heuristic_baseline),
+        },
+        {
+            "policy": "q_learning_weather_occ",
+            "avg_energy_import": q_metrics.avg_energy_import,
+            "avg_cost": q_metrics.avg_cost,
+            "energy_sav": fixed_baseline.avg_energy_import - q_metrics.avg_energy_import,
+            "energy_sav_%": safe_pct(fixed_baseline.avg_energy_import, q_metrics.avg_energy_import),
+            "cost_sav": fixed_baseline.avg_cost - q_metrics.avg_cost,
+            "cost_sav_%": safe_pct(fixed_baseline.avg_cost, q_metrics.avg_cost),
+            "score_vs_fixed": q_score,
+        },
+    ])
+    summary_df.to_csv(f"{OUTPUT_PREFIX}_results.csv", index=False)
+
+    per_episode_df = pd.DataFrame(
+        {
+            "episode": np.arange(1, EVAL_EPISODES + 1),
+            "fixed_energy": fixed_baseline.episode_energies,
+            "fixed_cost": fixed_baseline.episode_costs,
+            "heuristic_energy": heuristic_baseline.episode_energies,
+            "heuristic_cost": heuristic_baseline.episode_costs,
+            "q_energy": q_metrics.episode_energies,
+            "q_cost": q_metrics.episode_costs,
+        }
+    )
+    per_episode_df["q_energy_sav_%"] = [safe_pct(b, q) for b, q in zip(per_episode_df["fixed_energy"], per_episode_df["q_energy"])]
+    per_episode_df["q_cost_sav_%"] = [safe_pct(b, q) for b, q in zip(per_episode_df["fixed_cost"], per_episode_df["q_cost"])]
+    per_episode_df.to_csv(f"{OUTPUT_PREFIX}_per_episode.csv", index=False)
+
+    training_df = pd.DataFrame(
+        {
+            "episode": np.arange(1, TRAIN_EPISODES + 1),
+            "training_reward": train_rewards,
+            "training_energy": train_energy,
+            "training_cost": train_cost,
+        }
+    )
+    training_df.to_csv(f"{OUTPUT_PREFIX}_training_log.csv", index=False)
+
+    plot_training(train_rewards, train_energy, train_cost, validation_history)
+    plot_eval_summary(summary_df)
+
+    print("\n[5/5] Final summary...")
+    print(summary_df.to_string(index=False, float_format=lambda x: f"{x:.5f}"))
+
+    print("\n  Saved files:")
+    for file_name in [
+        f"{OUTPUT_PREFIX}_results.csv",
+        f"{OUTPUT_PREFIX}_per_episode.csv",
+        f"{OUTPUT_PREFIX}_training_log.csv",
+        f"{OUTPUT_PREFIX}_training.png",
+        f"{OUTPUT_PREFIX}_eval_summary.png",
+    ]:
+        print(f"    {file_name}")
+
+    print(sep)
+
+
+if __name__ == "__main__":
+    main()
