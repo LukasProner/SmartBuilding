@@ -1,0 +1,10 @@
+metric,value
+energy_win_weeks,52
+cost_win_weeks,41
+both_win_weeks,41
+energy_win_hours,15
+cost_win_hours,16
+best_energy_week,35
+worst_energy_week,47
+best_energy_hour,22
+worst_energy_hour,11
