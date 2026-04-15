@@ -1,0 +1,11 @@
+run_id,seed,policy,reward,grid_import_kwh,net_consumption_kwh,discomfort_proportion,cumulative_reward,training_seconds,stability_episode,last_10_episode_reward_mean,is_best_fixed,best_fixed_grid_import_kwh,best_fixed_cumulative_reward,grid_import_savings_pct
+1,7,OwnAdaptiveTabularQLearning,EnergyOnlyReward,797.137,733.256,0.6059,-797.137,206.76,,-872.536,False,1728.141,-1728.141,53.87315039687155
+2,8,OwnAdaptiveTabularQLearning,EnergyOnlyReward,747.381,664.933,0.7195,-747.381,202.7,58.0,-873.369,False,1728.141,-1728.141,56.752313613298924
+3,9,OwnAdaptiveTabularQLearning,EnergyOnlyReward,762.864,691.646,0.6452,-762.864,200.97,77.0,-880.256,False,1728.141,-1728.141,55.85637977456701
+4,10,OwnAdaptiveTabularQLearning,EnergyOnlyReward,783.906,732.742,0.6199,-783.906,202.83,76.0,-876.714,False,1728.141,-1728.141,54.63877079474418
+5,11,OwnAdaptiveTabularQLearning,EnergyOnlyReward,720.814,670.584,0.6199,-720.814,202.61,76.0,-901.605,False,1728.141,-1728.141,58.289630302157065
+1,7,OwnAdaptiveTabularQLearning,WeatherOccupancyReward,821.212,758.941,0.5624,-1738.102,205.99,,-1874.59,False,1728.141,-3750.742,52.4800349045593
+2,8,OwnAdaptiveTabularQLearning,WeatherOccupancyReward,886.261,825.722,0.6199,-1872.219,210.6,58.0,-1922.359,False,1728.141,-3750.742,48.715932322651916
+3,9,OwnAdaptiveTabularQLearning,WeatherOccupancyReward,831.767,797.982,0.5919,-1781.265,213.83,61.0,-1869.615,False,1728.141,-3750.742,51.86926298259228
+4,10,OwnAdaptiveTabularQLearning,WeatherOccupancyReward,724.513,656.201,0.7083,-1534.606,204.92,76.0,-1912.428,False,1728.141,-3750.742,58.0755852676373
+5,11,OwnAdaptiveTabularQLearning,WeatherOccupancyReward,813.362,751.749,0.5933,-1721.637,205.77,,-1871.882,False,1728.141,-3750.742,52.93428024680857

@@ -1,0 +1,6 @@
+policy,reward,grid_import_kwh,net_consumption_kwh,discomfort_proportion,cumulative_reward,savings_vs_best_fixed_pct,training_seconds,stability_episode,last_10_episode_reward_mean
+FixedCooling(0.50),ReferencePolicy,1728.141,1727.784,0.9748,-1728.141,0.0,,,
+FixedCooling(0.70),ReferencePolicy,2308.419,2308.062,0.9804,-2308.419,0.0,,,
+FixedCooling(0.90),ReferencePolicy,2888.697,2888.34,0.9804,-2888.697,0.0,,,
+OwnAdaptiveTabularQLearning,EnergyOnlyReward,797.137,733.256,0.6059,-797.137,53.873,203.52,,-872.536
+OwnAdaptiveTabularQLearning,WeatherOccupancyReward,821.212,758.941,0.5624,-1738.102,52.48,209.31,,-1874.59

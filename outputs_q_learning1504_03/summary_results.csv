@@ -1,0 +1,5 @@
+policy,reward,grid_import_kwh,net_consumption_kwh,discomfort_proportion,occupied_overheat_mean_degC,occupied_overheat_hours,cumulative_reward,savings_vs_best_fixed_pct,training_seconds,stability_episode,last_10_episode_reward_mean
+FixedCooling(0.50),ReferencePolicy,1728.141,1727.784,0.9748,0.0007,9.0,-1728.141,0.0,,,
+FixedCooling(0.70),ReferencePolicy,2308.419,2308.062,0.9804,0.0005,8.0,-2308.419,0.0,,,
+FixedCooling(0.90),ReferencePolicy,2888.697,2888.34,0.9804,0.0005,8.0,-2888.697,0.0,,,
+OwnAdaptiveTabularQLearning,EnergyOnlyReward,709.557,657.742,0.6452,2.0736,416.0,-709.557,58.941,201.52,67.0,-844.261

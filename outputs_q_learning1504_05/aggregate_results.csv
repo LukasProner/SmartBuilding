@@ -1,0 +1,9 @@
+reward,policy,runs,mean_grid_import_kwh,std_grid_import_kwh,mean_discomfort_proportion,std_discomfort_proportion,mean_cumulative_reward,std_cumulative_reward,mean_training_seconds,mean_last_10_episode_reward
+EnergyOnlyReward,FixedCooling(0.50),5,1728.141,0.0,0.9747999999999999,0.0,-1728.141,0.0,0.0,0.0
+EnergyOnlyReward,FixedCooling(0.70),5,2308.419,0.0,0.9804,0.0,-2308.419,0.0,0.0,0.0
+EnergyOnlyReward,FixedCooling(0.90),5,2888.697,0.0,0.9804,0.0,-2888.697,0.0,0.0,0.0
+EnergyOnlyReward,OwnAdaptiveTabularQLearning,5,762.4204,30.101271473145456,0.64208,0.04554252957401466,-762.4204,30.101271473145456,203.174,-880.896
+WeatherOccupancyReward,FixedCooling(0.50),5,1728.141,0.0,0.9747999999999999,0.0,-3750.7419999999997,0.0,0.0,0.0
+WeatherOccupancyReward,FixedCooling(0.70),5,2308.419,0.0,0.9804,0.0,-4993.447,0.0,0.0,0.0
+WeatherOccupancyReward,FixedCooling(0.90),5,2888.697,0.0,0.9804,0.0,-6236.152,0.0,0.0,0.0
+WeatherOccupancyReward,OwnAdaptiveTabularQLearning,5,815.423,58.28279532160408,0.61516,0.05590177099162423,-1729.5657999999999,123.66062322623156,208.22200000000004,-1890.1748

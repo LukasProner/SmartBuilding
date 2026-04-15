@@ -1,0 +1,106 @@
+{
+  "random_seed": 0,
+  "root_directory": null,
+  "central_agent": true,
+  "simulation_start_time_step": 0,
+  "simulation_end_time_step": 7,
+  "episode_time_steps": 8,
+  "rolling_episode_split": false,
+  "random_episode_split": false,
+  "seconds_per_time_step": 900,
+  "start_date": "2024-01-01",
+  "observations": {
+    "month": { "active": true, "shared_in_central_agent": true },
+    "day_type": { "active": true, "shared_in_central_agent": true },
+    "hour": { "active": true, "shared_in_central_agent": true },
+    "minutes": { "active": true, "shared_in_central_agent": true },
+    "outdoor_dry_bulb_temperature": { "active": true, "shared_in_central_agent": true },
+    "outdoor_dry_bulb_temperature_predicted_1": { "active": true, "shared_in_central_agent": true },
+    "outdoor_relative_humidity": { "active": true, "shared_in_central_agent": true },
+    "outdoor_relative_humidity_predicted_1": { "active": true, "shared_in_central_agent": true },
+    "diffuse_solar_irradiance": { "active": true, "shared_in_central_agent": true },
+    "diffuse_solar_irradiance_predicted_1": { "active": true, "shared_in_central_agent": true },
+    "direct_solar_irradiance": { "active": true, "shared_in_central_agent": true },
+    "direct_solar_irradiance_predicted_1": { "active": true, "shared_in_central_agent": true },
+    "carbon_intensity": { "active": true, "shared_in_central_agent": true },
+    "non_shiftable_load": { "active": true, "shared_in_central_agent": false },
+    "solar_generation": { "active": true, "shared_in_central_agent": false },
+    "electrical_storage_soc": { "active": true, "shared_in_central_agent": false },
+    "net_electricity_consumption": { "active": true, "shared_in_central_agent": false },
+    "electricity_pricing": { "active": true, "shared_in_central_agent": true },
+    "electricity_pricing_predicted_1": { "active": true, "shared_in_central_agent": true },
+    "electricity_pricing_predicted_2": { "active": true, "shared_in_central_agent": true },
+    "electricity_pricing_predicted_3": { "active": true, "shared_in_central_agent": true },
+    "electric_vehicle_charger_connected_state": { "active": true, "shared_in_central_agent": true },
+    "connected_electric_vehicle_at_charger_battery_capacity": { "active": true, "shared_in_central_agent": true },
+    "connected_electric_vehicle_at_charger_departure_time": { "active": true, "shared_in_central_agent": true },
+    "connected_electric_vehicle_at_charger_required_soc_departure": { "active": true, "shared_in_central_agent": true },
+    "connected_electric_vehicle_at_charger_soc": { "active": true, "shared_in_central_agent": true },
+    "electric_vehicle_charger_incoming_state": { "active": true, "shared_in_central_agent": true },
+    "incoming_electric_vehicle_at_charger_estimated_arrival_time": { "active": true, "shared_in_central_agent": true }
+  },
+  "actions": {
+    "electrical_storage": { "active": true },
+    "electric_vehicle_storage": { "active": true }
+  },
+  "agent": {
+    "type": "citylearn.agents.rbc.BasicElectricVehicleRBC_ReferenceController",
+    "attributes": {}
+  },
+  "reward_function": {
+    "type": "citylearn.reward_function.RewardFunction",
+    "attributes": {}
+  },
+  "electric_vehicles_def": {
+    "Electric_Vehicle_1": {
+      "include": true,
+      "battery": {
+        "type": "citylearn.energy_model.Battery",
+        "autosize": false,
+        "attributes": {
+          "capacity": 20.0,
+          "nominal_power": 7.2,
+          "initial_soc": 0.4,
+          "efficiency": 0.95
+        }
+      }
+    }
+  },
+  "buildings": {
+    "Building_1": {
+      "include": true,
+      "energy_simulation": "Building_1.csv",
+      "weather": "weather.csv",
+      "carbon_intensity": "carbon_intensity.csv",
+      "pricing": "pricing.csv",
+      "inactive_observations": [],
+      "inactive_actions": [],
+      "electrical_storage": {
+        "type": "citylearn.energy_model.Battery",
+        "autosize": false,
+        "attributes": {
+          "capacity": 5.0,
+          "nominal_power": 5.0,
+          "initial_soc": 0.5,
+          "efficiency": 0.9
+        }
+      },
+      "chargers": {
+        "charger_1_1": {
+          "type": "citylearn.electric_vehicle_charger.Charger",
+          "charger_simulation": "charger_1_1.csv",
+          "autosize": false,
+          "attributes": {
+            "nominal_power": 7.2,
+            "efficiency": 0.95,
+            "charger_type": 0,
+            "max_charging_power": 7.2,
+            "min_charging_power": 0.0,
+            "max_discharging_power": 7.2,
+            "min_discharging_power": 0.0
+          }
+        }
+      }
+    }
+  }
+}
