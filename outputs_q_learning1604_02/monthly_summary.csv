@@ -1,0 +1,2 @@
+month_index,month_name,hours,fixed_cumulative_reward,q_learning_cumulative_reward,fixed_grid_import_kwh,q_learning_grid_import_kwh,q_learning_savings_vs_fixed_pct
+1,Jan,719,-3750.741845626801,-905.4038873544393,1728.1408015489578,412.0008764471859,76.15929928406855
