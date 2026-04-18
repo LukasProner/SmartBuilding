@@ -1,0 +1,3 @@
+policy,grid_import_kwh,net_consumption_kwh,discomfort_proportion,cumulative_reward,savings_vs_fixed_pct,training_seconds,stability_episode,last_10_episode_reward_mean
+Fixed(cool=0.50),1728.141,1727.784,0.9748,-3750.742,0.0,,,
+Q-learning (3 actions + Solar),708.088,586.142,0.7097,-1514.079,59.026,2070.81,82.0,-1652.765

@@ -1,0 +1,5 @@
+policy,grid_import_kwh,net_consumption_kwh,discomfort_proportion,cumulative_reward,savings_vs_fixed_pct,training_seconds,stability_episode,last_10_episode_reward_mean
+Fixed(cool=0.50),4121.091,4121.091,0.837,-12360.254,0.0,,,
+Q-learning (Weather reward),1209.938,1062.188,0.9318,-3741.188,70.64,1539.26,82.0,-4688.99
+Q-learning (Energy-only reward),1272.885,1156.162,0.8911,-1329.182,69.113,1570.29,102.0,-1582.478
+Q-learning (Pricing reward),1342.089,1194.686,0.8511,-1491.251,67.434,1597.55,103.0,-1602.951
