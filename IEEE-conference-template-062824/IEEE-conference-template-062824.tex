@@ -1,0 +1,125 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+%Template version as of 6/27/2024
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Reinforcement Learning pre energeticky efektivne riadenie budovy na zaklade predpovede pocasia a obsadenosti\thanks{V pripade potreby doplnte informaciu o financovani projektu.}}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Meno Priezvisko}
+\IEEEauthorblockA{\textit{Nazov pracoviska} \\
+\textit{Nazov institucie}\\
+Mesto, Krajina \\
+email alebo ORCID}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Meno Priezvisko}
+\IEEEauthorblockA{\textit{Nazov pracoviska} \\
+\textit{Nazov institucie}\\
+Mesto, Krajina \\
+email alebo ORCID}}
+
+\maketitle
+
+\begin{abstract}
+Prispevok predstavuje navrh a postupne rozsirenie riesenia zalozeneho na reinforcement learningu pre riadenie energetickeho spravania budovy v prostredi CityLearn. Povodne zadanie bolo zamerane na navrh agenta, ktory bude prijimat riadiace rozhodnutia na zaklade predpovede pocasia a informacie o obsadenosti. Z tohto dovodu prva verzia riesenia vychadzala zo zjednoduseneho tabulkoveho Q-learningu, v ktorom bol stav obmedzeny na predikovanu vonkajsiu teplotu, predikovane solarne ziarenie a pritomnost uzivatelov. Akcny priestor bol zaroven zredukovany iba na riadenie chladenia, aby bol model konzistentny s dostupnymi informaciami.
+
+Po vytvoreni tejto zakladnej verzie bolo riesenie postupne rozsirovane o bohatsie stavove reprezentacie a alternativne reward funkcie. Motivaciou bolo zistenie, ze prakticke energeticke riadenie, najma pri ulohach suvisiacich so zasobnikmi energie alebo ekonomickou optimalizaciou, vyzaduje aj dalsie informacie, napr. stav nabitia alebo cenove signaly. Clanok preto porovnava minimalisticku verziu, ktora priamo zodpoveda zadaniu, s neskorsimi rozsirenymi variantmi a zdoraznuje kompromis medzi jednoduchostou modelu a praktickou pouzitelnostou naucenej politiky.
+\end{abstract}
+
+\begin{IEEEkeywords}
+reinforcement learning, CityLearn, energeticky manazment, Q-learning, obsadenost, predpoved pocasia, inteligentne budovy
+\end{IEEEkeywords}
+
+\section{Uvod}
+Energeticky manazment inteligentnych budov je v sucasnosti coraz viac ovplyvnovany prediktivnymi informaciami, ako su predpovede pocasia, ocakavane solarne zisky, profily obsadenosti a v niektorych pripadoch aj ceny elektrickej energie. Reinforcement learning predstavuje vhodny pristup k rieseniu tohto problemu, pretoze umoznuje naucit riadiacu politiku priamo interakciou so simulacnym prostredim bez potreby explicitneho analytickeho modelu celej dynamiky budovy. V tejto praci je cielom navrh RL agenta, ktory bude optimalizovat spravanie budovy primarne na zaklade predikovanych poveternostnych podmienok a obsadenosti.
+
+Pociatocny navrh riesenia bol zamerne jednoduchy. Zadanie explicitne vyzadovalo riesenie zalozene na pocasi a obsadenosti, preto bola prva implementacia vytvorena tak, aby tuto poziadavku splnala co najpresnejsie. Namiesto rozsiahleho stavoveho priestoru a viacerich riadenych zariadeni bol najprv navrhnuty kompaktny tabulkovy Q-learning agent s obmedzenym akcny priestorom. Takto vznikla jasna bazalna verzia, ktoru bolo mozne jednoducho interpretovat a priamo vztiahnut k zadaniu.
+
+V dalsom priebehu prace sa vsak ukazalo, ze minimalisticka formulacia sice dobre demonstruje splnenie zadania, ale nedokaze pokryt vsetky aspekty praktickeho energetickeho riadenia. Rozhodnutia o nabijani a vybijani zasobnikov napr. vyzaduju dodatocne informacie o ich aktualnom stave a niektore reward funkcie ziskavaju zmysel az po doplneni cenovych alebo storage-related signalov. Z tohto dovodu sa riesenie postupne vyvijalo smerom k bohatsiemu stavovemu inzinierstvu a sirsej mnozine reward funkcii. Tento clanok opisuje prave tuto postupnost, od najjednoduchsej verzie zodpovedajucej zadaniu az po rozsireny experimentalny ramec.
+
+\section{Specifikacia zadania}
+Zakladnym cielom zadania bolo naucit RL agenta optimalizovat prevadzku budovy na zaklade predpovedanych poveternostnych velicin a informacie o obsadenosti. V praktickom vyjadreni to znamena, ze agent ma pozorovat informacie dostupne vopred, napr. predikovanu vonkajsiu teplotu a solarne ziarenie, kombinovat ich s informaciou o pritomnosti uzivatelov a volit take riadiace akcie, ktore povedu k energeticky vyhodnejsiemu spravaniu budovy, najma k znízeniu odberu elektriny zo siete.
+
+Takto formulovane zadanie je mozne interpretovat dvoma sposobmi. Prvy predstavuje prisnu interpretaciu, v ktorej agent vyuziva iba pocasie a obsadenost. Druhy predstavuje praktickejsiu interpretaciu, v ktorej agent stale vychadza z pocasia a obsadenosti, ale pri zlozitejsich riadiacich rozhodnutiach moze profitovat aj z dodatocnych stavovych premennych, ako je stav nabitia zasobnikov alebo cenove signaly. Jednou z hlavnych tem tejto prace je preto rozdiel medzi minimalistickym riesenim, ktore presne sleduje zadanie, a rozsirenym experimentom, ktory sa snazi o praktickejsie energeticke riadenie.
+
+\section{Prostredie CityLearn}
+CityLearn je open-source prostredie pre reinforcement learning zamerane na studium koordinovaneho energetickeho riadenia budov a mestskych stvrti. Modeluje budovy spolu s riaditelnymi zariadeniami a energetickymi subsystemami a poskytuje standardizovane rozhranie pre observacie, akcie, reward a vyhodnotenie vykonu. Pre tuto pracu je CityLearn vhodny najma preto, ze umoznuje testovat rozne RL navrhy v rovnakom simulacnom scenari a zaroven zachovava porovnatelny sposob evaluacie.
+
+V prostredi CityLearn je budova charakterizovana mnozinou pozorovanych velicin a mnozinou riaditelnych akcii. Pozorovania mozu obsahovat predpovede pocasia, solarne informacie, obsadenost, cenu elektriny aj stavy energetickych zasobnikov. Akcie mozu zahŕňať riadenie chladenia a v bohatsich konfiguraciach aj nabijanie a vybijanie tepelnych alebo elektrickych zasobnikov. Prave toto oddelenie medzi observaciami a akciami je klucove, pretoze umoznuje skumat, kolko informacii agent skutocne potrebuje na naucenie zmysluplnej politiky.
+
+Dalsou vyhodou CityLearn je moznost hodnotit vysledky pomocou interpretovatelnych metrik, ako su import elektriny zo siete, kumulativny reward a ukazovatele suvisiace s diskomfortom. Prostredie je preto vhodne nielen na samotny trening agentov, ale aj na porovnavanie naucenych politik s jednoduchymi referencnymi strategiami.
+
+\section{Pociatocny navrh Q-learningu podla zadania}
+Prva implementacia bola navrhnuta tak, aby co najvernejsie nasledovala poziadavky zadania. Tato verzia je reprezentovana skriptom `Q_learning2104_weather_only.py`. Hlavnym cielom navrhu bolo zabezpecit, aby stavova reprezentacia obsahovala iba take premenne, ktore mozno rozumne povazovat za predikovane poveternostne informacie a informaciu o obsadenosti. Z tohto dovodu boli medzi aktivne observacie zaradene predikovane hodnoty vonkajsej teploty, difuzneho a priameho solarneho ziarenia a pocet pritomnych uzivatelov.
+
+Stav vsak nepouzival surove observacie priamo. Namiesto toho boli vytvorene inzinierovane priznaky odvodené z tychto hodnot. Patrili sem prva predikovana hodnota teploty, trend teploty medzi prvymi dvoma krokmi predikcie, celkovy predikovany solarny vstup, trend solarneho vstupu a binarna informacia o obsadenosti. Takato reprezentacia mala dve vyhody. Po prve, zmensila rozmery stavoveho priestoru. Po druhe, pretransformovala surove numericke hodnoty na informacie, ktore su z pohladu riadenia relevantnejsie.
+
+Akcny priestor bol v tejto prvej verzii zamerne zjednoduseny iba na riadenie chladenia. Spojita hodnota akcie bola diskretizovana na tri mozne urovne. Tento krok nebol nahodny. Ak by boli ponechane aj storage akcie, ale stav by neobsahoval zodpovedajuce informacie o stave zasobnikov, agent by rozhodoval o nabijani a vybijani naslepo. Aby sa takemuto nekonzistentnemu nastaveniu predislo, pociatocna verzia riesenia sa sustredila iba na cooling device.
+
+Aj reward funkcia bola zvolena tak, aby ostala co najblizsie zadaniu. Vybrany reward penalizoval kladny odber zo siete a tuto penalizaciu zosilnoval pri obsadenej budove a pri vyssej predikovanej teplote. Agent bol tak vedeny k opatrnejsiemu spravaniu v situaciach, ked je pravdepodobne vacsia potreba chladenia aj vacsi dopad na komfort uzivatelov.
+
+\section{Formulacia tabulkoveho Q-learningu}
+Pociatocny agent vyuzival tabulkovy Q-learning. Stavovy priestor bol diskretizovany do konecneho poctu binov a akcny priestor bol tiez diskretizovany na maly pocet moznych hodnot chladenia. Q-tabulka tak uchovavala odhad hodnoty vykonania konkretnej akcie v konkretnom diskretnom stave. Pocasi treningu agent volil akcie pomocou $\epsilon$-greedy strategie, ktora kombinuje exploraciu a exploataciu. Pravdepodobnost exploracie sa postupne znizovala, pricom adaptivny mechanizmus ju vedel docasne zvysit v pripade, ze sa ucenie prestalo zlepsovat.
+
+Aktualizacia hodnot sa riadila standardnou temporal-difference formulou:
+\begin{equation}
+Q(s,a) \leftarrow Q(s,a) + \alpha \left[r + \gamma \max_{a'}Q(s',a') - Q(s,a)\right]
+\end{equation}
+kde $s$ je aktualny diskretny stav, $a$ zvolena akcia, $r$ prijaty reward, $s'$ nasledujuci stav, $\alpha$ miera ucenia a $\gamma$ diskontny faktor. Tato formulacia bola zvolena preto, ze je jednoducha, interpretovatelna a vhodna na demonstrovanie vplyvu stavoveho inzinierstva v kompaktnom experimentalnom nastaveni.
+
+\section{Evaluacia pociatocneho riesenia}
+Pociatocna weather-and-occupancy implementacia bola vyhodnocovana oproti fixnej strategii. Fixna strategia aplikovala konstantnu akciu chladenia pocas celej simulacie, zatial co naucena Q-learning politika menila akciu na zaklade diskretizovaneho stavu. Aby bola evaluacia informativnejsia, experiment bol rozdeleny na treningovu a evaluacnu fazu: agent sa trenoval na prvych dvoch budovach a testoval na tretej budove. Taketo nastavenie umoznilo sledovat nielen schopnost ucenia, ale aj obmedzenu schopnost prenosu medzi budovami.
+
+Vyhodnotenie zahrnalo kumulativny reward, celkovy grid import a porovnanie s fixnou referenciou. Toto porovnanie bolo dolezite, pretoze samotny reward nemusi vzdy postacovat na posudenie kvality politiky, najma ak obsahuje viacero vahovanych faktorov. Porovnanie s konstantnym baseline umoznilo kvantifikovat, ci naucena politika prinasa realne prevadzkove zlepsenie.
+
+\section{Obmedzenia minimalistickej formulacie}
+Hoci pociatocna formulacia dobre zodpovedala zadaniu, zaroven odhalila niekolko obmedzeni. Najvyraznejsim z nich bolo to, ze minimalisticky stav je prilis obmedzeny v momente, ked sa problem rozsiruje o riadenie dalsich zariadeni. Najma rozhodnutia o nabijani a vybijani energetickych zasobnikov nie je mozne robit spolahlivo bez informacie o aktualnom stave nabitia. Podobne aj pricing-aware reward funkcie vyzaduju pristup k informaciam o cenach elektriny, ak ma agent na ekonomicke signaly reagovat zmysluplne.
+
+Z toho vyplynul dolezity metodicky zaver: zvysenie vykonnosti agenta nevyzaduje iba „viac dat” vo vseobecnom zmysle, ale najma informativnejsiu stavovu reprezentaciu. Podstatny nie je iba objem dat, ale to, ci stav obsahuje premenne, ktore su nevyhnutne pre rozhodnutie, ktore ma agent vykonat.
+
+\section{Prechod k rozsirenym Q-learning experimentom}
+Po vytvoreni pociatocnej verzie nasledovali vseobecnejsie Q-learning experimenty implementovane v skriptoch, ako je `Q_learning2104_01.py`. V tychto verziach bola stavova reprezentacia rozsirená o dodatocne premenne, napr. cenu elektriny, cenove trendy a stav nabitia zasobnikov. Zaroven bol rozsireny akcny priestor tak, aby zahrnal riadenie zasobnika teplej vody, elektrickeho zasobnika a chladenia naraz.
+
+Dovod tohto prechodu bol prakticky. Akonahle sa ciel posunul od cistej demonstracie zadania k experimentovaniu s viacerymi reward funkciami a realistickejsim energetickym spravanim, uzky weather-and-occupancy stav prestal byt dostacujuci. Reward podporujuci lepsie vyuzitie zasobnikov sa napr. len tazko nauci, ak agent nepozna ich aktualny stav. Podobne pricing-aware reward nedava plny zmysel, ak v observaciach chybaju cenove informacie. Rozsirene skripty tak predstavuju vedomy prechod od obmedzeneho demonstratora k sirsimu experimentálnemu ramcu.
+
+\section{Reward engineering a experimentálne varianty}
+Vyraznou sucastou neskorsej fazy prace bolo studium roznych reward funkcii. Kym povodny reward zdoraznoval pocasie a obsadenost, neskorsie skripty pracovali aj s variantmi zameranymi na ciste minimalizovanie grid importu, cenovo senzitivne penalizacie, komfortne penalizacie, solarne prisposobene rewardy alebo storage-orientovane rewardy. Tento krok bol dolezity, pretoze rozne reward funkcie vedu k odlisnemu spravaniu agentov aj v tom istom prostredi a pri rovnakom akcno-stavovom priestore.
+
+Z metodickeho hladiska reward funkcia urcuje, co ma agent optimalizovat, zatial co stav urcuje, co agent vie pri rozhodovani. Toto rozlisenie sa stalo klucovou castou rozvoja celeho riesenia. V pociatocnej verzii boli stav aj reward zamerne minimalisticke, aby odrazali zadanie. V neskorsich verziach sa reward priestor rozsiril, ale spolu s nim bolo nutne rozsirit aj stav, aby agent zostal konzistentny a vedel prijimat rozhodnutia na zaklade relevantnych informacii.
+
+\section{Potreba bohatsieho stavoveho priestoru}
+Jednym z hlavnych poznatkov projektu je, ze uzitocnost dalsich observacii zavisi od povahy riadenej ulohy. Ak je jedinou riadenou velicinou chladenie a cielom je co najvernejsie drzat sa zadania, mozu byt predpovede pocasia a obsadenost dostacujuce. Ak sa vsak problem rozsiri o riadenie zasobnikov, ekonomicku optimalizaciu alebo kompromis medzi energiou a komfortom, potom musi stav obsahovat aj premenne, ktore tieto rozhodnutia spristupnuju. Bohatsie stavove reprezentacie sa teda nezavadzaju len preto, aby bol model zlozitejsi, ale preto, aby bol uciaci problem dobre definovany.
+
+Z tohto pohladu mozno priebeh celej prace zhrnut takto. V prvej faze bol pouzity najmensi observation set konzistentny so zadanim. V druhej faze boli doplnene dalsie stavove premenne pri studiu sirsich riadiacich cielov. V tretej faze boli porovnavane viacere reward funkcie a zvazovane aj expresivnejsie RL pristupy. Takato postupnost predstavuje prirodzeny prechod od interpretovatelneho a „zadaniu verneho” riesenia k realistickejsiemu experimentálnemu modelu.
+
+\section{Diskusia}
+Projekt ukazal, ze ma zmysel zachovat sucasne minimalisticku aj rozsirenú implementaciu. Minimalisticka weather-and-occupancy verzia je hodnotna preto, ze jasne ukazuje, ako mozno zadanie riesit priamo pomocou kompaktneho a interpretovatelneho Q-learningu. Zaroven ulahcuje vysvetlenie ulohy predikovanych velicin a obsadenosti v riadiacej slucke. Na druhej strane, rozsirené verzie maju vyznam preto, ze umoznuju studovat bohatšie reward struktury a praktickejsie ciele energetickeho riadenia.
+
+Prave tento dvojity pohlad je pri reinforcement learningu v energetickych systemoch dolezity. Uzka stavova reprezentacia moze lepsie zodpovedat formalnemu zneniu zadania, avsak bohatsia reprezentacia moze byt nevyhnutna pre ziskanie politik, ktore su prakticky pouzitelne pri vseobecnejsich riadiacich ulohach. Hlavnym prinosom tejto prace preto nie je iba implementacia jedneho agenta, ale aj zdokumentovanie prechodu od obmedzeneho zadaniovo orientovaneho navrhu k sirsiej experimentálnej metodike.
+
+\section{Zaver}
+Prispevok predstavil vyvoj riesenia zalozeneho na reinforcement learningu pre energeticke riadenie budovy v prostredi CityLearn, ktory zacal zadanim orientovanym na predpovede pocasia a obsadenost a neskor sa rozsirili smerom k bohatsim stavovym a reward formulaciam. Pociatocny weather-and-occupancy-only Q-learning poskytol jasnu a interpretovatelnu bazalnu verziu konzistentnu so zadanim. Jeho hlavna hodnota spociva v tom, ze demonstruje moznost navrhnut reinforcement learning regulator priamo z prediktivnych a occupancy-related informacii.
+
+Zaroven sa vsak ukazalo, ze vseobecnejsie ciele energetickeho riadenia vyzaduju informativnejsi stavovy priestor. Najma riadenie zasobnikov a cenovo senzitivne rozhodovanie profituju z doplnenia storage a ekonomickych premennych do stavu. Praca preto navrhuje uzitocne metodicke rozdelenie: minimalisticky model pre cistu demonstraciu zadania a rozsireny experimentalny model pre hlbsiu analyzu. Buduca praca moze na tuto strukturu nadviazat zahrnutim pokrocilejsich metod spojiteho riadenia, ako je DDPG, a doplnenim detailnych kvantitativnych vysledkov na viacerych budovach a pri viacerych reward funkciach.
+
+\section*{Podakovanie}
+Tuto cast upravte podla skutocneho kontextu projektu. Ak je to potrebne, doplnte podakovanie veducemu prace, konzultantovi alebo institucii, ktora poskytla podporu.
+
+\section*{Referencie}
+
+\begin{thebibliography}{00}
+\bibitem{b1} Doplňte hlavnu referenciu na CityLearn.
+\bibitem{b2} Doplňte zakladnu referenciu na reinforcement learning alebo Q-learning.
+\bibitem{b3} Doplňte dalsie zdroje pre DDPG, energeticky manazment budov alebo smart building control.
+\end{thebibliography}
+
+\end{document}

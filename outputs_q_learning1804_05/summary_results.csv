@@ -1,0 +1,14 @@
+policy,grid_import_kwh,net_consumption_kwh,discomfort_proportion,cumulative_reward,savings_vs_fixed_pct,training_seconds,stability_episode,last_10_episode_reward_mean
+Fixed(cool=0.50),4121.091,4121.091,0.837,-12360.254,0.0,,,
+Q-learning (Weather reward),1673.256,1564.133,0.6458,-5111.231,59.398,444.85,,-7545.36
+Q-learning (Energy-only reward),1500.157,1386.75,0.8183,-1551.692,63.598,398.94,,-2504.578
+Q-learning (Pricing reward),1806.14,1724.882,0.6905,-1963.618,56.173,405.05,,-2645.785
+Q-learning (Comfort reward),4347.348,4337.221,0.8469,-11579.289,-5.49,400.97,20.0,-10947.558
+Q-learning (Peak-shaving reward),1962.024,1925.977,0.5681,-4363.064,52.391,386.76,,-8362.973
+Q-learning (Solar reward),1623.659,1463.781,0.7464,-1439.965,60.601,383.68,,-2203.455
+Q-learning (Storage reward),1500.157,1386.75,0.8183,-1551.692,63.598,383.62,,-2504.578
+Q-learning (Ramping reward),1720.949,1558.872,0.6792,-2546.707,58.24,382.49,,-4206.056
+Q-learning (TimeOfUse reward),2102.194,1977.279,0.6039,-3733.077,48.989,720.96,,-3124.316
+Q-learning (SelfSufficiency reward),1672.873,1537.487,0.7559,-1625.981,59.407,394.0,,-2276.932
+Q-learning (Combined reward),3119.171,3080.406,0.4898,-4857.303,24.312,414.4,38.0,-5577.341
+Q-learning (NightPrecharge reward),1747.06,1622.362,0.5674,-1950.819,57.607,406.32,,-2299.038
