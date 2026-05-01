@@ -1,0 +1,3 @@
+policy,grid_import_kwh,export_kwh,net_grid_balance_kwh,net_consumption_kwh,discomfort_proportion,all_rewards,cost_total,carbon_emissions_total,daily_peak_average,ramping_average,zero_net_energy,cost_vs_fixed_pct,emissions_vs_fixed_pct,peak_vs_fixed_pct,savings_vs_fixed_pct,reward_vs_fixed_pct,train_sec,stability_episode,last_10_episode_reward_mean
+Fixed(cool=0.00),1054.236,14.799,1039.437,1039.437,0.4067,-3311.124,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,,,,
+Q-learning (Solar-price arbitrage),1078.898,33.902,1044.996,1044.996,0.4067,-2780.566,1.026,1.0248,1.0428,1.2636,1.0053,2.599,2.479,4.283,-2.339,16.024,128.54,20.0,-2962.191

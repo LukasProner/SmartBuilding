@@ -1,0 +1,6 @@
+policy,grid_import_kwh,export_kwh,net_grid_balance_kwh,net_consumption_kwh,discomfort_proportion,all_rewards,cost_total,carbon_emissions_total,daily_peak_average,ramping_average,zero_net_energy,cost_vs_fixed_pct,emissions_vs_fixed_pct,peak_vs_fixed_pct,savings_vs_fixed_pct,reward_vs_fixed_pct,train_sec,stability_episode,last_10_episode_reward_mean
+Fixed(cool=0.00),1054.236,14.799,1039.437,1039.437,0.4067,-3311.124,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,,,,
+Q-learning (Grid import only),1114.202,60.068,1054.134,1054.134,0.4067,-1114.202,1.0588,1.0562,1.06,1.6411,1.0141,5.877,5.616,5.999,-5.688,66.35,158.02,20.0,-1130.137
+Q-learning (Peak shaving),1085.3,39.146,1046.154,1046.154,0.4067,-2801.905,1.0233,1.0271,0.964,1.1692,1.0065,2.328,2.712,-3.602,-2.947,15.379,167.84,20.0,-3334.001
+Q-learning (TimeOfUse reward),1070.895,28.531,1042.364,1042.364,0.4067,-1605.591,1.0049,1.0172,1.0341,1.1037,1.0028,0.489,1.718,3.411,-1.58,51.509,162.05,,-1477.415
+Q-learning (Solar alignment),1080.409,34.662,1045.747,1045.747,0.4067,-981.483,1.024,1.0252,1.0079,1.265,1.0061,2.4,2.524,0.792,-2.483,70.358,161.29,20.0,-1021.78
