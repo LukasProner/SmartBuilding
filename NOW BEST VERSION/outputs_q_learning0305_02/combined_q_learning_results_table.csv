@@ -1,0 +1,3 @@
+source_dir,algorithm,reward_key,episodes,grid_import_kwh,grid_import_ratio_vs_fixed,savings_vs_fixed_pct,discomfort_proportion,discomfort_ratio_vs_fixed,cost_total_ratio,cost_ratio_vs_fixed,carbon_emissions_total_ratio,daily_peak_average_ratio,ramping_average_ratio,train_sec,stability_episode,last_10_episode_reward_mean
+outputs_q_learning0305_02,Fixed,fixed,,4121.091,,0.0,0.837,,1.5106,,1.5555,1.1472,0.8896,,,
+outputs_q_learning0305_02,Q-learning,timeofuse,,1812.811,0.43988618547855407,56.011,0.6094,0.7280764635603346,0.7367,0.48768701178339735,0.7469,1.4063,2.0717,382.1,,-3576.105

@@ -1,0 +1,3 @@
+policy,grid_import_kwh,export_kwh,net_consumption_kwh,discomfort_proportion,discomfort_cold_proportion,discomfort_hot_proportion,all_rewards,cost_total_ratio,carbon_emissions_total_ratio,daily_peak_average_ratio,ramping_average_ratio,savings_vs_fixed_pct,train_sec,stability_episode,last_10_episode_reward_mean
+Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-12360.254,1.5106,1.5555,1.1472,0.8896,0.0,,,
+Q-learning (TimeOfUse reward),1812.811,165.62,1647.192,0.6094,0.0789,0.5305,-3689.253,0.7367,0.7469,1.4063,2.0717,56.011,382.1,,-3576.105

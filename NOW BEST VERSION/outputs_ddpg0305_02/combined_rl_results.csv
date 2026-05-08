@@ -1,0 +1,143 @@
+source_dir,algorithm,reward_name,reward_key,episodes,policy,grid_import_kwh,export_kwh,net_consumption_kwh,discomfort_proportion,discomfort_cold_proportion,discomfort_hot_proportion,all_rewards,cost_total_ratio,carbon_emissions_total_ratio,daily_peak_average_ratio,ramping_average_ratio,savings_vs_fixed_pct,train_sec,stability_episode,last_10_episode_reward_mean
+outputs_ddpg0305_02_copy,DDPG,NightPrecharge reward,nightprecharge,40.0,DDPG (NightPrecharge reward),1073.285,137.037,936.248,0.9758,0.0,0.9758,-1182.822,0.4069,0.4336,0.6883,1.0335,73.956,645.15,38.0,-1264.951
+outputs_ddpg0305_02_copy copy,DDPG,NightPrecharge reward,nightprecharge,40.0,DDPG (NightPrecharge reward),1073.285,137.037,936.248,0.9758,0.0,0.9758,-1182.822,0.4069,0.4336,0.6883,1.0335,73.956,645.15,38.0,-1264.951
+outputs_ddpg,DDPG,Weather reward,weather,40.0,DDPG (Weather reward),410.04,,278.008,0.9804,,,-901.408,,,,,76.273,515.91,22.0,-1065.755
+outputs_ddpg0305_01,DDPG,Weather reward,weather,50.0,DDPG (Weather reward),1059.285,161.274,898.011,0.9782,0.0,0.9782,-2171.119,0.3872,0.4125,0.6858,0.9356,74.296,855.65,22.0,-2506.384
+outputs_ddpg0505_01,DDPG decentral,NightPrecharge reward,nightprecharge,40.0,DDPG decentral (NightPrecharge reward),1149.566,223.96,925.606,0.9782,0.0,0.9782,-973.09,0.4394,0.4661,0.8685,1.2318,72.105,774.76,,-1260.212
+outputs_ddpg,Fixed,fixed,fixed,,Fixed(cool=0.50),1728.141,,1727.784,0.9748,,,-3750.742,,,,,0.0,,,
+outputs_ddpg0305_01,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-7918.719,1.5106,1.5555,1.1472,0.8896,0.0,,,
+outputs_ddpg0305_02_copy,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-12360.254,1.5106,1.5555,1.1472,0.8896,0.0,,,
+outputs_ddpg0305_02_copy copy,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-12360.254,1.5106,1.5555,1.1472,0.8896,0.0,,,
+outputs_ddpg0505_01,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-12360.254,1.5106,1.5555,1.1472,0.8896,0.0,,,
+outputs_q_learning0105_02,Fixed,fixed,fixed,,Fixed(cool=0.00),1053.555,,894.726,0.9782,,,-3392.731,,,,,0.0,,,
+outputs_q_learning0105_03,Fixed,fixed,fixed,,Fixed(cool=0.00),1053.555,,894.726,0.9782,,,-3392.731,,,,,0.0,,,
+outputs_q_learning0105_04,Fixed,fixed,fixed,,Fixed(cool=0.00),1054.236,14.799,1039.437,0.4067,,,-3311.124,,,,,0.0,,,
+outputs_q_learning0105_06,Fixed,fixed,fixed,,Fixed(cool=0.00),1054.236,14.799,1039.437,0.4067,,,-3311.124,,,,,0.0,,,
+outputs_q_learning0105_07,Fixed,fixed,fixed,,Fixed(cool=0.00),1054.236,14.799,1039.437,0.4067,,,-3311.124,,,,,0.0,,,
+outputs_q_learning0105_08,Fixed,fixed,fixed,,Fixed(cool=0.00),1053.555,158.829,894.726,0.9782,,,-3392.731,,,,,0.0,,,
+outputs_q_learning0205_02,Fixed,fixed,fixed,,Fixed(cool=0.25),2507.947,0.039,2507.909,0.4125,0.341,0.0715,-7595.735,0.9109,0.9468,0.915,0.8888,0.0,,,
+outputs_q_learning0205_02,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-12360.254,1.5106,1.5555,1.1472,0.8896,0.0,,,
+outputs_q_learning0305_02,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-12360.254,1.5106,1.5555,1.1472,0.8896,0.0,,,
+outputs_q_learning0505_02,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,0.0,4121.091,0.837,0.8351,0.0019,-12360.254,1.5106,1.5555,1.1472,0.8896,0.0,,,
+outputs_q_learning1604_03,Fixed,fixed,fixed,,Fixed(cool=0.50),1728.141,,1727.784,0.9748,,,-3750.742,,,,,0.0,,,
+outputs_q_learning1704_01_withSolar,Fixed,fixed,fixed,,Fixed(cool=0.50),1728.141,,1727.784,0.9748,,,-3750.742,,,,,0.0,,,
+outputs_q_learning1804_01_backup,Fixed,fixed,fixed,,Fixed(cool=0.50),1728.141,,1727.784,0.9748,,,-3750.742,,,,,0.0,,,
+outputs_q_learning1804_03,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,,4121.091,0.837,,,-12360.254,,,,,0.0,,,
+outputs_q_learning1804_05,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,,4121.091,0.837,,,-12360.254,,,,,0.0,,,
+outputs_q_learning1804_05_2,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,,4121.091,0.837,,,-12360.254,,,,,0.0,,,
+outputs_q_learning1804_05_200_copy,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,,4121.091,0.837,,,-12360.254,,,,,0.0,,,
+outputs_q_learning2004_02,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,,4121.091,0.837,,,-12360.254,,,,,0.0,,,
+outputs_q_learning2104_weather_only,Fixed,fixed,fixed,,Fixed(cool=0.50),4336.148,,4336.148,0.8779,,,-12023.402,,,,,0.0,,,
+outputs_q_learning2404_02_01,Fixed,fixed,fixed,,Fixed(cool=0.50),4121.091,,4121.091,0.837,,,-12360.254,,,,,0.0,,,
+outputs_q_learning1504_06,FixedCooling,0.50,0.50,,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-1728.141,,,,,0.0,,,
+outputs_q_learning1504_06,FixedCooling,0.50,0.50,,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-2964.675,,,,,0.0,,,
+outputs_q_learning1504_06,FixedCooling,0.50,0.50,,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-2376.607,,,,,0.0,,,
+outputs_q_learning1504_06,FixedCooling,0.50,0.50,,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-3750.742,,,,,0.0,,,
+outputs_q_learning1504_03,FixedCooling,0.50,0.50,80.0,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-1728.141,,,,,,,,
+outputs_q_learning1504_04,FixedCooling,0.50,0.50,80.0,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-1728.141,,,,,,,,
+outputs_q_learning1504_05,FixedCooling,0.50,0.50,80.0,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-1728.141,,,,,0.0,,,
+outputs_q_learning1604_01,FixedCooling,0.50,0.50,400.0,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-3750.742,,,,,0.0,,,
+outputs_q_learning1604_02,FixedCooling,0.50,0.50,700.0,FixedCooling(0.50),1728.141,,1727.784,0.9748,,,-3750.742,,,,,0.0,,,
+outputs_q_learning1504_02,FixedCooling,0.70,0.70,10.0,FixedCooling(0.70),2308.419,,2308.062,0.9804,,,-2308.419,,,,,0.0,,,
+outputs_q_learning1504_03,FixedCooling,0.70,0.70,80.0,FixedCooling(0.70),2308.419,,2308.062,0.9804,,,-2308.419,,,,,,,,
+outputs_q_learning1504_04,FixedCooling,0.70,0.70,80.0,FixedCooling(0.70),2308.419,,2308.062,0.9804,,,-2308.419,,,,,,,,
+outputs_q_learning1504_03,FixedCooling,0.90,0.90,80.0,FixedCooling(0.90),2888.697,,2888.34,0.9804,,,-2888.697,,,,,,,,
+outputs_q_learning1504_04,FixedCooling,0.90,0.90,80.0,FixedCooling(0.90),2888.697,,2888.34,0.9804,,,-2888.697,,,,,,,,
+outputs_q_learning1504_06,OwnAdaptiveTabularQLearning,unknown,unknown,,OwnAdaptiveTabularQLearning,797.137,,733.256,0.6059,,,-797.137,,,,,53.873,197.01,,-872.536
+outputs_q_learning1504_06,OwnAdaptiveTabularQLearning,unknown,unknown,,OwnAdaptiveTabularQLearning,708.594,,644.899,0.6297,,,-1190.052,,,,,58.997,196.21,,-1487.122
+outputs_q_learning1504_06,OwnAdaptiveTabularQLearning,unknown,unknown,,OwnAdaptiveTabularQLearning,746.123,,681.886,0.6241,,,-1023.102,,,,,56.825,197.41,56.0,-1193.401
+outputs_q_learning1504_06,OwnAdaptiveTabularQLearning,unknown,unknown,,OwnAdaptiveTabularQLearning,821.212,,758.941,0.5624,,,-1738.102,,,,,52.48,200.85,,-1874.59
+outputs_q_learning1504_03,OwnAdaptiveTabularQLearning,unknown,unknown,80.0,OwnAdaptiveTabularQLearning,709.557,,657.742,0.6452,,,-709.557,,,,,,201.52,67.0,-844.261
+outputs_q_learning1504_04,OwnAdaptiveTabularQLearning,unknown,unknown,80.0,OwnAdaptiveTabularQLearning,797.137,,733.256,0.6059,,,-797.137,,,,,,203.52,,-872.536
+outputs_q_learning1504_04,OwnAdaptiveTabularQLearning,unknown,unknown,80.0,OwnAdaptiveTabularQLearning,821.212,,758.941,0.5624,,,-1738.102,,,,,,209.31,,-1874.59
+outputs_q_learning1504_05,OwnAdaptiveTabularQLearning,unknown,unknown,80.0,OwnAdaptiveTabularQLearning,797.137,,733.256,0.6059,,,-797.137,,,,,53.873,217.98,,-872.536
+outputs_q_learning1504_05,OwnAdaptiveTabularQLearning,unknown,unknown,80.0,OwnAdaptiveTabularQLearning,821.212,,758.941,0.5624,,,-1738.102,,,,,52.48,225.81,,-1874.59
+outputs_q_learning1604_01,OwnAdaptiveTabularQLearning,unknown,unknown,400.0,OwnAdaptiveTabularQLearning,417.869,,298.664,0.9748,,,-914.428,,,,,75.82,1003.76,82.0,-1057.643
+outputs_q_learning1604_02,OwnAdaptiveTabularQLearning,unknown,unknown,700.0,OwnAdaptiveTabularQLearning,412.001,,295.581,0.9804,,,-905.404,,,,,76.159,1792.32,82.0,-1088.45
+outputs_q_learning1504_02,OwnTabularQLearning,unknown,unknown,10.0,OwnTabularQLearning,802.066,,729.66,0.6381,,,-802.066,,,,,65.255,29.16,,-1485.591
+outputs_q_learning1604_03,Q-learning,3 actions,3_actions,400.0,Q-learning (3 actions),663.454,,549.253,0.6648,,,-1433.577,,,,,61.609,1031.35,95.0,-1608.523
+outputs_q_learning1704_01_withSolar,Q-learning,3 actions + Solar,3_actions_+_solar,800.0,Q-learning (3 actions + Solar),708.088,,586.142,0.7097,,,-1514.079,,,,,59.026,2070.81,82.0,-1652.765
+outputs_q_learning2404_02_01,Q-learning,Combined reward,combined,1.0,Q-learning (Combined reward),1853.796,,1686.788,0.6144,,,-18928.861,,,,,55.017,8.23,,-6600.403
+outputs_q_learning0105_02,Q-learning,Combined reward,combined,2.0,Q-learning (Combined reward),2434.482,,2314.562,0.5372,,,-10440.092,,,,,-131.073,17.56,,-6769.021
+outputs_q_learning1804_05_2,Q-learning,Combined reward,combined,2.0,Q-learning (Combined reward),2207.142,,2121.063,0.4509,,,-10623.238,,,,,46.443,15.32,,-6579.308
+outputs_q_learning0105_03,Q-learning,Combined reward,combined,30.0,Q-learning (Combined reward),2748.047,,2679.444,0.4842,,,-7932.609,,,,,-160.836,237.26,25.0,-6076.786
+outputs_q_learning1804_05,Q-learning,Combined reward,combined,50.0,Q-learning (Combined reward),3119.171,,3080.406,0.4898,,,-4857.303,,,,,24.312,414.4,38.0,-5577.341
+outputs_q_learning1804_05_200_copy,Q-learning,Combined reward,combined,200.0,Q-learning (Combined reward),3286.115,,3275.774,0.7447,,,-6884.942,,,,,20.261,1626.54,38.0,-5075.844
+outputs_q_learning2404_02_01,Q-learning,Comfort reward,comfort,1.0,Q-learning (Comfort reward),1853.796,,1686.788,0.6144,,,-89797.471,,,,,55.017,7.77,,-12781.504
+outputs_q_learning0105_02,Q-learning,Comfort reward,comfort,2.0,Q-learning (Comfort reward),2434.482,,2314.562,0.5372,,,-44870.094,,,,,-131.073,15.49,,-13626.664
+outputs_q_learning1804_05_2,Q-learning,Comfort reward,comfort,2.0,Q-learning (Comfort reward),2812.254,,2759.733,0.5335,,,-32365.483,,,,,31.759,15.47,,-12700.562
+outputs_q_learning1804_05,Q-learning,Comfort reward,comfort,50.0,Q-learning (Comfort reward),4347.348,,4337.221,0.8469,,,-11579.289,,,,,-5.49,400.97,20.0,-10947.558
+outputs_q_learning1804_05_200_copy,Q-learning,Comfort reward,comfort,200.0,Q-learning (Comfort reward),3486.317,,3464.333,0.6342,,,-9916.01,,,,,15.403,1525.74,20.0,-10312.986
+outputs_q_learning2404_02_01,Q-learning,Energy-only reward,energy,1.0,Q-learning (Energy-only reward),1549.233,,1404.143,0.7248,,,-1593.311,,,,,62.407,7.53,,-4374.529
+outputs_q_learning0105_02,Q-learning,Energy-only reward,energy,2.0,Q-learning (Energy-only reward),1504.786,,1269.645,0.7904,,,-1604.232,,,,,-42.829,16.81,,-4368.297
+outputs_q_learning1804_05_2,Q-learning,Energy-only reward,energy,2.0,Q-learning (Energy-only reward),1838.63,,1690.903,0.5755,,,-1904.671,,,,,55.385,16.3,,-4389.403
+outputs_q_learning1804_05,Q-learning,Energy-only reward,energy,50.0,Q-learning (Energy-only reward),1500.157,,1386.75,0.8183,,,-1551.692,,,,,63.598,398.94,,-2504.578
+outputs_q_learning1804_03,Q-learning,Energy-only reward,energy,200.0,Q-learning (Energy-only reward),1272.885,,1156.162,0.8911,,,-1329.182,,,,,69.113,1570.29,102.0,-1582.478
+outputs_q_learning1804_05_200_copy,Q-learning,Energy-only reward,energy,200.0,Q-learning (Energy-only reward),1272.885,,1156.162,0.8911,,,-1329.182,,,,,69.113,1622.8,102.0,-1582.478
+outputs_q_learning1804_01_backup,Q-learning,Energy-only reward,energy,400.0,Q-learning (Energy-only reward),678.771,,560.704,0.6438,,,-678.771,,,,,60.722,1070.02,77.0,-719.966
+outputs_q_learning0105_06,Q-learning,Grid import only,grid_import_only,50.0,Q-learning (Grid import only),1114.202,60.068,1054.134,0.4067,,,-1114.202,,,,,-5.688,158.02,20.0,-1130.137
+outputs_q_learning2404_02_01,Q-learning,NightPrecharge reward,nightprecharge,1.0,Q-learning (NightPrecharge reward),1417.629,,1229.738,0.8972,,,-1240.815,,,,,65.601,7.67,,-4227.929
+outputs_q_learning0105_02,Q-learning,NightPrecharge reward,nightprecharge,2.0,Q-learning (NightPrecharge reward),1140.729,,933.949,0.9645,,,-1257.883,,,,,-8.274,17.16,,-4247.939
+outputs_q_learning1804_05_2,Q-learning,NightPrecharge reward,nightprecharge,2.0,Q-learning (NightPrecharge reward),1248.679,,1048.146,0.9492,,,-1245.461,,,,,69.7,15.36,,-4254.387
+outputs_q_learning0105_03,Q-learning,NightPrecharge reward,nightprecharge,30.0,Q-learning (NightPrecharge reward),1115.534,,963.953,0.9599,,,-1242.344,,,,,-5.883,236.05,,-2875.611
+outputs_q_learning1804_05,Q-learning,NightPrecharge reward,nightprecharge,50.0,Q-learning (NightPrecharge reward),1747.06,,1622.362,0.5674,,,-1950.819,,,,,57.607,406.32,,-2299.038
+outputs_q_learning1804_05_200_copy,Q-learning,NightPrecharge reward,nightprecharge,200.0,Q-learning (NightPrecharge reward),1112.857,,953.06,0.9711,,,-1046.248,,,,,72.996,1614.84,,-1550.752
+outputs_q_learning2404_02_01,Q-learning,Peak-shaving reward,peak_shaving,1.0,Q-learning (Peak-shaving reward),1549.233,,1404.143,0.7248,,,-3397.266,,,,,62.407,7.61,,-15238.018
+outputs_q_learning0105_02,Q-learning,Peak-shaving reward,peak_shaving,2.0,Q-learning (Peak-shaving reward),1504.786,,1269.645,0.7904,,,-4756.876,,,,,-42.829,16.05,,-16186.314
+outputs_q_learning1804_05_2,Q-learning,Peak-shaving reward,peak_shaving,2.0,Q-learning (Peak-shaving reward),1675.802,,1528.075,0.7516,,,-4866.767,,,,,59.336,15.14,,-15433.181
+outputs_q_learning0105_06,Q-learning,Peak shaving,peak_shaving,50.0,Q-learning (Peak shaving),1085.3,39.146,1046.154,0.4067,,,-2801.905,,,,,-2.947,167.84,20.0,-3334.001
+outputs_q_learning1804_05,Q-learning,Peak-shaving reward,peak_shaving,50.0,Q-learning (Peak-shaving reward),1962.024,,1925.977,0.5681,,,-4363.064,,,,,52.391,386.76,,-8362.973
+outputs_q_learning1804_05_200_copy,Q-learning,Peak-shaving reward,peak_shaving,200.0,Q-learning (Peak-shaving reward),1752.008,,1632.572,0.5734,,,-4180.62,,,,,57.487,1536.8,,-4846.85
+outputs_q_learning2404_02_01,Q-learning,Pricing reward,pricing,1.0,Q-learning (Pricing reward),1549.233,,1404.143,0.7248,,,-1689.203,,,,,62.407,7.92,,-4646.238
+outputs_q_learning0105_02,Q-learning,Pricing reward,pricing,2.0,Q-learning (Pricing reward),1504.786,,1269.645,0.7904,,,-1702.399,,,,,-42.829,15.8,,-4639.697
+outputs_q_learning1804_05_2,Q-learning,Pricing reward,pricing,2.0,Q-learning (Pricing reward),1838.63,,1690.903,0.5755,,,-2038.293,,,,,55.385,16.15,,-4662.812
+outputs_q_learning0105_03,Q-learning,Pricing reward,pricing,30.0,Q-learning (Pricing reward),1193.776,,1018.423,0.9492,,,-1348.304,,,,,-13.309,255.78,,-3231.666
+outputs_q_learning0105_04,Q-learning,Pricing reward,pricing,50.0,Q-learning (Pricing reward),1088.398,39.32,1049.078,0.4067,,,-1159.529,,,,,-3.24,130.42,20.0,-1200.306
+outputs_q_learning0205_02,Q-learning,Pricing reward,pricing,50.0,Q-learning (Pricing reward),1806.14,81.258,1724.882,0.6905,0.09,0.6005,-1963.618,0.6666,0.7049,1.0142,1.5399,27.983,420.97,,-2645.785
+outputs_q_learning1804_05,Q-learning,Pricing reward,pricing,50.0,Q-learning (Pricing reward),1806.14,,1724.882,0.6905,,,-1963.618,,,,,56.173,405.05,,-2645.785
+outputs_q_learning1804_03,Q-learning,Pricing reward,pricing,200.0,Q-learning (Pricing reward),1342.089,,1194.686,0.8511,,,-1491.251,,,,,67.434,1597.55,103.0,-1602.951
+outputs_q_learning1804_05_200_copy,Q-learning,Pricing reward,pricing,200.0,Q-learning (Pricing reward),1342.089,,1194.686,0.8511,,,-1491.251,,,,,67.434,1513.55,103.0,-1602.951
+outputs_q_learning2404_02_01,Q-learning,Ramping reward,ramping,1.0,Q-learning (Ramping reward),2536.845,,2437.361,0.558,,,-3668.324,,,,,38.442,7.69,,-6323.531
+outputs_q_learning0105_02,Q-learning,Ramping reward,ramping,2.0,Q-learning (Ramping reward),1798.435,,1615.476,0.7253,,,-2990.647,,,,,-70.702,18.84,,-6379.903
+outputs_q_learning1804_05_2,Q-learning,Ramping reward,ramping,2.0,Q-learning (Ramping reward),2430.367,,2261.224,0.5481,,,-3691.417,,,,,41.026,15.23,,-6319.73
+outputs_q_learning1804_05,Q-learning,Ramping reward,ramping,50.0,Q-learning (Ramping reward),1720.949,,1558.872,0.6792,,,-2546.707,,,,,58.24,382.49,,-4206.056
+outputs_q_learning1804_05_200_copy,Q-learning,Ramping reward,ramping,200.0,Q-learning (Ramping reward),1322.184,,1161.128,0.8647,,,-1952.361,,,,,67.917,1772.91,116.0,-2530.912
+outputs_q_learning0105_08,Q-learning,Selective export reward,selective_export,50.0,Q-learning (Selective export reward),1396.555,133.179,1263.376,0.8665,,,-3566.198,,,,,-32.556,384.75,,-5413.869
+outputs_q_learning2404_02_01,Q-learning,SelfSufficiency reward,selfsufficiency,1.0,Q-learning (SelfSufficiency reward),1337.484,,1255.084,0.8895,,,-1330.532,,,,,67.545,7.86,,-4289.665
+outputs_q_learning0105_02,Q-learning,SelfSufficiency reward,selfsufficiency,2.0,Q-learning (SelfSufficiency reward),1058.061,,898.979,0.9782,,,-1004.186,,,,,-0.428,19.2,,-4242.202
+outputs_q_learning1804_05_2,Q-learning,SelfSufficiency reward,selfsufficiency,2.0,Q-learning (SelfSufficiency reward),1274.404,,1119.261,0.9148,,,-1223.09,,,,,69.076,15.15,,-4300.381
+outputs_q_learning1804_05,Q-learning,SelfSufficiency reward,selfsufficiency,50.0,Q-learning (SelfSufficiency reward),1672.873,,1537.487,0.7559,,,-1625.981,,,,,59.407,394.0,,-2276.932
+outputs_q_learning1804_05_200_copy,Q-learning,SelfSufficiency reward,selfsufficiency,200.0,Q-learning (SelfSufficiency reward),1232.561,,1087.622,0.9294,,,-1183.04,,,,,70.091,1628.8,87.0,-1449.266
+outputs_q_learning2404_02_01,Q-learning,Solar reward,solar,1.0,Q-learning (Solar reward),1549.233,,1404.143,0.7248,,,-1381.667,,,,,62.407,7.69,,-3831.115
+outputs_q_learning0105_02,Q-learning,Solar reward,solar,2.0,Q-learning (Solar reward),1504.786,,1269.645,0.7904,,,-1394.025,,,,,-42.829,15.53,,-3826.466
+outputs_q_learning1804_05_2,Q-learning,Solar reward,solar,2.0,Q-learning (Solar reward),1838.63,,1690.903,0.5755,,,-1688.19,,,,,55.385,15.43,,-3845.079
+outputs_q_learning1804_05,Q-learning,Solar reward,solar,50.0,Q-learning (Solar reward),1623.659,,1463.781,0.7464,,,-1439.965,,,,,60.601,383.68,,-2203.455
+outputs_q_learning1804_05_200_copy,Q-learning,Solar reward,solar,200.0,Q-learning (Solar reward),1470.652,,1333.219,0.7765,,,-1345.942,,,,,64.314,1594.0,153.0,-1394.255
+outputs_q_learning0105_06,Q-learning,Solar alignment,solar_alignment,50.0,Q-learning (Solar alignment),1080.409,34.662,1045.747,0.4067,,,-981.483,,,,,-2.483,161.29,20.0,-1021.78
+outputs_q_learning0105_07,Q-learning,Solar-price arbitrage,solar_price_arbitrage,50.0,Q-learning (Solar-price arbitrage),1078.898,33.902,1044.996,0.4067,,,-2780.566,,,,,-2.339,128.54,20.0,-2962.191
+outputs_q_learning2404_02_01,Q-learning,Storage reward,storage,1.0,Q-learning (Storage reward),1549.233,,1404.143,0.7248,,,-1593.311,,,,,62.407,7.57,,-4374.529
+outputs_q_learning0105_02,Q-learning,Storage reward,storage,2.0,Q-learning (Storage reward),1504.786,,1269.645,0.7904,,,-1604.232,,,,,-42.829,16.37,,-4368.297
+outputs_q_learning1804_05_2,Q-learning,Storage reward,storage,2.0,Q-learning (Storage reward),1838.63,,1690.903,0.5755,,,-1904.671,,,,,55.385,15.64,,-4389.403
+outputs_q_learning0105_03,Q-learning,Storage reward,storage,30.0,Q-learning (Storage reward),1197.251,,1010.853,0.935,,,-1252.365,,,,,-13.639,236.03,,-3040.188
+outputs_q_learning0105_04,Q-learning,Storage reward,storage,50.0,Q-learning (Storage reward),1114.202,60.068,1054.134,0.4067,,,-1114.202,,,,,-5.688,131.18,20.0,-1130.137
+outputs_q_learning1804_05,Q-learning,Storage reward,storage,50.0,Q-learning (Storage reward),1500.157,,1386.75,0.8183,,,-1551.692,,,,,63.598,383.62,,-2504.578
+outputs_q_learning1804_05_200_copy,Q-learning,Storage reward,storage,200.0,Q-learning (Storage reward),1272.885,,1156.162,0.8911,,,-1329.182,,,,,69.113,1625.2,102.0,-1582.478
+outputs_q_learning0505_02,Q-learning,Storage reward,storage,250.0,Q-learning (Storage reward),1125.956,171.89,954.065,0.9611,0.0014,0.9597,-1180.416,0.4149,0.446,0.7194,1.0076,72.678,2175.16,102.0,-1540.685
+outputs_q_learning2404_02_01,Q-learning,TimeOfUse reward,timeofuse,1.0,Q-learning (TimeOfUse reward),1874.889,,1729.798,0.6136,,,-2487.229,,,,,54.505,7.56,,-5691.519
+outputs_q_learning0105_02,Q-learning,TimeOfUse reward,timeofuse,2.0,Q-learning (TimeOfUse reward),1504.786,,1269.645,0.7904,,,-2036.535,,,,,-42.829,19.29,,-5766.077
+outputs_q_learning1804_05_2,Q-learning,TimeOfUse reward,timeofuse,2.0,Q-learning (TimeOfUse reward),1838.63,,1690.903,0.5755,,,-2538.91,,,,,55.385,15.12,,-5762.253
+outputs_q_learning0105_03,Q-learning,TimeOfUse reward,timeofuse,30.0,Q-learning (TimeOfUse reward),1262.318,,1110.207,0.9258,,,-1856.924,,,,,-19.815,236.83,,-3864.967
+outputs_q_learning0105_06,Q-learning,TimeOfUse reward,timeofuse,50.0,Q-learning (TimeOfUse reward),1070.895,28.531,1042.364,0.4067,,,-1605.591,,,,,-1.58,162.05,,-1477.415
+outputs_q_learning0205_02,Q-learning,TimeOfUse reward,timeofuse,50.0,Q-learning (TimeOfUse reward),1812.811,165.62,1647.192,0.6094,0.0789,0.5305,-3689.253,0.7367,0.7469,1.4063,2.0717,56.011,385.69,,-3576.105
+outputs_q_learning0305_02,Q-learning,TimeOfUse reward,timeofuse,50.0,Q-learning (TimeOfUse reward),1812.811,165.62,1647.192,0.6094,0.0789,0.5305,-3689.253,0.7367,0.7469,1.4063,2.0717,56.011,382.1,,-3576.105
+outputs_q_learning1804_05,Q-learning,TimeOfUse reward,timeofuse,50.0,Q-learning (TimeOfUse reward),2102.194,,1977.279,0.6039,,,-3733.077,,,,,48.989,720.96,,-3124.316
+outputs_q_learning1804_05_200_copy,Q-learning,TimeOfUse reward,timeofuse,200.0,Q-learning (TimeOfUse reward),1240.166,,1072.375,0.9268,,,-1425.787,,,,,69.907,1562.67,,-2321.784
+outputs_q_learning2404_02_01,Q-learning,Weather reward,weather,1.0,Q-learning (Weather reward),1549.233,,1404.143,0.7248,,,-4934.849,,,,,62.407,7.68,,-13097.799
+outputs_q_learning0105_02,Q-learning,Weather reward,weather,2.0,Q-learning (Weather reward),1504.786,,1269.645,0.7904,,,-4856.134,,,,,-42.829,19.36,,-13080.167
+outputs_q_learning1804_05_2,Q-learning,Weather reward,weather,2.0,Q-learning (Weather reward),1838.63,,1690.903,0.5755,,,-5854.641,,,,,55.385,15.93,,-13147.155
+outputs_q_learning1804_05,Q-learning,Weather reward,weather,50.0,Q-learning (Weather reward),1673.256,,1564.133,0.6458,,,-5111.231,,,,,59.398,444.85,,-7545.36
+outputs_q_learning1804_03,Q-learning,Weather reward,weather,200.0,Q-learning (Weather reward),1209.938,,1062.188,0.9318,,,-3741.188,,,,,70.64,1539.26,82.0,-4688.99
+outputs_q_learning1804_05_200_copy,Q-learning,Weather reward,weather,200.0,Q-learning (Weather reward),1209.938,,1062.188,0.9318,,,-3741.188,,,,,70.64,1550.2,82.0,-4688.99
+outputs_q_learning1804_01_backup,Q-learning,Weather reward,weather,400.0,Q-learning (Weather reward),663.454,,549.253,0.6648,,,-1433.577,,,,,61.609,1132.3,95.0,-1608.523
+outputs_q_learning2004_02,Q-learning,"Weather reward, seed=7","weather,_seed=7",400.0,"Q-learning (Weather reward, seed=7)",1099.203,,954.754,0.975,,,-3499.692,,,,,73.327,3211.51,82.0,-4497.106
+outputs_q_learning2104_weather_only,Q-learning,"Weather reward, seed=7","weather,_seed=7",400.0,"Q-learning (Weather reward, seed=7)",1467.115,,1334.842,0.9617,,,-4201.634,,,,,66.165,6844.98,110.0,-6751.989

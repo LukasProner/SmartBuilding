@@ -1,0 +1,235 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+%Template version as of 6/27/2024
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Energetická optimalizácia inteligentnej budovy\\
+% {\footnotesize \textsuperscript{*}Note: Sub-titles are not captured for https://ieeexplore.ieee.org  and
+% should not be used}
+% \thanks{Identify applicable funding agency here. If none, delete this.}
+}
+
+\author{
+\IEEEauthorblockN{Bc. Lukáš Proner}
+\IEEEauthorblockA{
+\textit{Fakulta informatiky a elektrotechniky} \\
+\textit{Technická univerzita v Košiciach} \\
+Katedra počítačov a informatiky \\
+Košice, Slovensko
+}
+\and
+\IEEEauthorblockN{Bc. Peter Balog}
+\IEEEauthorblockA{
+\textit{Fakulta informatiky a elektrotechniky} \\
+\textit{Technická univerzita v Košiciach} \\
+Katedra počítačov a informatiky \\
+Košice, Slovensko
+}
+}
+
+\maketitle
+
+\begin{abstract}
+
+Prispevok sa venuje ulohe energetickej optimalizacie inteligentnej budovy na zaklade predpovedi pocasia a obsadenosti miestnosti. V rieseni su pouzite algoritmy Q-learning a DDPG, ktore su nasledne porovnavane z pohladu uspor energie oproti fixnej strategii, vplyvu roznych reward funkcii a casu potrebneho na dosiahnutie stabilneho riesenia. Text sa zameriava primarne na vetvu riesenia zalozenu na Q-learningu, zatial co implementacia DDPG je popisana ako paralelna alternativa pre spojity akcny priestor.
+
+\end{abstract}
+
+\begin{IEEEkeywords}
+    
+CityLearn, energeticka optimalizacia, Q-learning, DDPG, obsadenost, predpoved pocasia, inteligentne budovy
+\end{IEEEkeywords}
+
+\section{Úvod}
+
+Energetická optimalizácia inteligentných budov predstavuje v súčasnosti významnú výzvu, najmä z hľadiska znižovania odberu elektrickej energie zo siete, zvyšovania prevádzkovej efektívnosti a prípravy budov na pokročilé formy prediktívneho riadenia \cite{b1,b15}.
+
+Táto práca vychádza z konkrétne definovaného zadania, ktorého cieľom je navrhnúť a natrénovať agenta schopného optimalizovať spotrebu energie v budove na základe predpovedí počasia a informácií o obsadenosti miestností.
+
+Ako vhodné prístupy sú uvažované algoritmy Q-learning a Deep Deterministic Policy Gradient (DDPG). Po ich implementácii budú tieto metódy porovnané z viacerých hľadísk, konkrétne z pohľadu dosiahnutých úspor energie v porovnaní s fixnou riadiacou stratégiou, citlivosti na rôzne návrhy reward funkcie a času potrebného na dosiahnutie stabilného riešenia.
+Agent pracuje s vopred dostupnými informáciami, najmä s predikovanou vonkajšou teplotou, solárnym žiarením a obsadenosťou budovy, a na ich základe volí riadiace akcie pre energeticky efektívnejšiu prevádzku. V rámci práce sú oba prístupy hodnotené pri rovnakých vstupných údajoch a v rovnakom simulačnom prostredí, aby bolo možné priamo porovnať ich správanie pri zhodne formulovaných cieľoch.
+
+Podobné smerovanie je v odbornej literatúre už dobre zastúpené. Reinforcement learning bol použitý napríklad na demand response v klastroch menších komerčných budov, na koordinované energetické riadenie viacerých budov aj na experimenty realizované priamo nad prostredím CityLearn, čo potvrdzuje, že zvolený typ formulácie úlohy má oporu v existujúcom výskume \cite{b17,b18,b19,b20}.
+
+
+\section{Prostredie CityLearn}
+
+CityLearn predstavuje open-source simulačné prostredie určené pre reinforcement learning, zamerané na výskum koordinovaného energetického riadenia budov a mestských štvrtí \cite{b1}. Umožňuje modelovanie jednotlivých budov spolu s ich riaditeľnými zariadeniami a energetickými subsystémami. Zároveň poskytuje štandardizované rozhranie pre definovanie observácií, akcií, odmeňovacej funkcie a vyhodnocovanie výkonnosti modelov, čo zodpovedá odporúčanému spôsobu porovnateľného hodnotenia RL prístupov v energetickom riadení budov \cite{b15}.
+
+Pre účely tejto práce je dôležitá najmä možnosť experimentovať s rôznymi reinforcement learning prístupmi v identickom simulačnom prostredí a vyhodnocovať ich rovnakým spôsobom.
+
+V prostredí CityLearn je každá budova reprezentovaná množinou pozorovaných veličín a množinou riaditeľných akcií. Medzi pozorovania patria napríklad predpovede počasia, solárne zisky, informácie o obsadenosti, cena elektrickej energie či aktuálne stavy energetických zásobníkov. Naopak, akčný priestor zahŕňa riadenie chladiacich systémov, nabíjanie a vybíjanie tepelných alebo elektrických zásobníkov.
+
+Prostredie zároveň poskytuje interpretovateľné metriky, ako sú množstvo importovanej elektriny zo siete, kumulatívny reward a ukazovatele tepelného diskomfortu, ktoré sú použité aj v tejto práci.
+
+\section{Q-learning}
+
+\subsection{Počiatočný návrh Q-learningu podľa zadania}
+
+Prvá implementácia bola navrhnutá tak, aby reflektovala zadanie a využívala iba predikované vstupy, konkrétne meteorologické údaje a obsadenosť budovy. Z týchto vstupov boli vytvorené inžinierske príznaky, ako trend teploty a solárneho žiarenia či binárna informácia o obsadenosti, čo znížilo dimenzionalitu a zvýšilo ich využiteľnosť pre riadenie. Akčný priestor bol zjednodušený na riadenie chladenia s tromi diskrétnymi úrovňami, aby sa predišlo nekonzistentnosti pri absencii informácií o stave zásobníkov. Reward funkcia penalizovala odber zo siete, pričom penalizácia bola zosilnená pri obsadenej budove a vyššej teplote, čím bol agent motivovaný k opatrnejšiemu riadeniu v kritických situáciách.
+
+
+\subsection{Formulácia tabuľkového Q-learningu}
+
+Počiatočný agent využíval tabuľkový Q-learning \cite{b12,b13}. Stavový priestor bol diskretizovaný na konečný počet intervalov a akčný priestor bol zredukovaný na malý počet diskrétnych hodnôt riadenia chladenia.
+
+Q-tabuľka následne uchovávala odhady kvality vykonania konkrétnej akcie v konkrétnom diskrétnom stave. Počas tréningu agent vyberal akcie pomocou $\epsilon$-greedy stratégie, ktorá vyvažuje skúmanie nových možností a využívanie už získaných poznatkov \cite{b13}.
+
+Hodnota $\epsilon$ sa postupne znižovala, pričom bol zároveň implementovaný adaptívny mechanizmus, ktorý ju dokázal dočasne zvýšiť v prípade stagnácie učenia, teda ak nedochádzalo k zlepšovaniu výkonu agenta.
+
+Aktualizácia hodnôt sa riadila štandardnou temporal-difference (TD) formulou:
+
+\begin{equation}
+Q(s,a) \leftarrow Q(s,a) + \alpha \left[r + \gamma \max_{a'}Q(s',a') - Q(s,a)\right]
+\end{equation}
+
+kde $s$ označuje aktuálny diskrétny stav, $a$ zvolenú akciu, $r$ prijatý reward, $s'$ nasledujúci stav, $\alpha$ mieru učenia a $\gamma$ diskontný faktor.
+
+\subsection{Evaluácia počiatočného riešenia}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.4\textwidth]{learning_progress_and_step_reward_first_96_steps_weather_seed_7.png}}
+\caption{Vývoj učenia a odmeny.}
+\label{fig}
+\end{figure}
+
+Počiatočné experimenty ukázali zlepšenie vybraných metrík za cenu mierne zvýšeného diskomfortu. Zároveň sa prejavilo obmedzenie veľmi jednoduchej stavovej reprezentácie, ktorá pri rozšírení problému o ďalšie zariadenia neposkytuje dostatočný opis systému. Rozhodovanie o zásobníkoch a reakcia na cenové signály vyžadujú doplnenie stavových informácií.
+
+\subsection{Prechod k rozšíreným Q-learning experimentom}
+
+Po vytvorení počiatočnej verzie nasledovali rozšírené Q-learning experimenty. Stavová reprezentácia bola rozšírená o ďalšie premenné, ako cena elektriny a stav nabitia zásobníkov.
+
+Zároveň bol rozšírený akčný priestor tak, aby zahŕňal súčasné riadenie zásobníka teplej vody, elektrického zásobníka a chladiaceho systému.
+
+V rozšírenom experimente bolo implementovaných 12 variantov reward funkcie, ktoré menia preferencie agenta pri nezmenenom stavovom a akčnom priestore. Väčšina variantov vychádza z penalizácie odberu elektriny zo siete, pričom sa líši dôrazom na cenu elektriny, teplotný komfort alebo stav zásobníkov.
+
+\begin{enumerate}
+\item \textbf{WeatherOccupancyReward} penalizuje import zo siete, pričom penalizácia rastie pri obsadenej budove a pri vyššej predikovanej vonkajšej teplote.
+
+\item \textbf{GridImportOnlyReward} predstavuje najjednoduchší baseline $r=-g$, ktorý penalizuje iba okamžitý import zo siete bez ďalších členov.
+
+\item \textbf{PricingAwareReward} zohľadňuje aktuálnu cenu elektriny, očakávaný rast ceny a priemerný stav zásobníkov. Podporuje nabíjanie pri lacnej energii a penalizuje import alebo predčasné vybíjanie pred drahším obdobím.
+
+\item \textbf{ComfortAwareReward} kombinuje penalizáciu importu zo siete s penalizáciou teplotného diskomfortu, pričom diskomfort má vyššiu váhu pri obsadenej budove.
+
+\item \textbf{PeakShavingReward} používa kvadratickú penalizáciu $r=-g^2$, čím výraznejšie trestá vysoké odberové špičky.
+
+\item \textbf{SolarAlignmentReward} využíva predikované slnečné žiarenie a stav zásobníkov. Podporuje nabíjanie pri vysokej irradiácii a penalizuje nevyužitý solárny potenciál alebo export pri nedostatočne nabitom úložisku.
+
+\item \textbf{StorageManagementReward} pracuje s aktuálnou cenou a priemerným stavom zásobníkov. Pri vyššej cene penalizuje nízky stav nabitia, pri nižšej cene naopak príliš vysoké nabitie.
+
+\item \textbf{RampingPenaltyReward} penalizuje nielen import zo siete, ale aj prudké zmeny odberu medzi po sebe nasledujúcimi krokmi.
+
+\item \textbf{TimeOfUseReward} používa pevný denný profil penalizácie, v ktorom je večerný import trestaný silnejšie a nočný import miernejšie, nezávisle od explicitnej ceny elektriny.
+
+\item \textbf{SelfSufficiencyReward} penalizuje import zo siete a pri exporte poskytuje kladný bonus, čím podporuje energetickú sebestačnosť.
+
+\item \textbf{CombinedMultiObjectiveReward} spája do jednej váženej funkcie import zo siete, cenu elektriny, teplotný diskomfort a penalizáciu odberových špičiek.
+
+\item \textbf{SmartTouReward} podporuje vyšší stav zásobníkov v nočných hodinách a počas večernej špičky silnejšie penalizuje import zo siete.
+\end{enumerate}
+
+\section{DDPG}
+
+\subsection{Motivácia pre použitie DDPG}
+
+Po rozšírení problému o súčasné riadenie zásobníka teplej vody, elektrického zásobníka a chladiaceho zariadenia začal počet kombinácií diskrétnych stavov a akcií rýchlo rásť. Z tohto dôvodu bol paralelne implementovaný aj algoritmus \textit{Deep Deterministic Policy Gradient} (DDPG) \cite{b14}, určený pre spojité akčné priestory a často používaný pri úlohách spojitého riadenia.
+
+V navrhnutom riešení je DDPG použitý ako decentralizovaný prístup. Každá budova dostáva vlastné pozorovanie, no všetky budovy využívajú rovnaký naučený mechanizmus výberu akcie. Príbuzné decentralizované alebo distribuované RL prístupy sa objavujú aj v literatúre zameranej na energetický demand response budov \cite{b21,b22}.
+
+\subsection{Reprezentácia stavu a akcií}
+
+DDPG experiment využíva rovnaký výber aktívnych pozorovaní a akcií ako rozšírená Q-learning verzia, aby bolo možné neskôr porovnávať oba prístupy za čo najpodobnejších podmienok. Vstup do agenta preto obsahuje predikované hodnoty vonkajšej teploty, difúzneho a priameho solárneho žiarenia, aktuálnu a predikovanú cenu elektriny, stav nabitia tepelného a elektrického zásobníka a informáciu o obsadenosti budovy.
+
+Na akčnej strane agent generuje tri spojité veličiny: riadenie zásobníka teplej vody, riadenie elektrického zásobníka a riadenie chladenia. Výstup aktora je najprv obmedzený funkciou $\tanh$ do intervalu $[-1,1]$ a následne lineárne preškálovaný na limity akčného priestoru prostredia.
+
+Jednotlivé pozorovania majú odlišné rozsahy, preto sú pred vstupom do neurónovej siete normalizované podľa dolnej a hornej hranice pozorovacieho priestoru.
+
+\subsection{Architektúra agenta a proces učenia}
+
+Implementovaný agent pozostáva z dvojice neurónových sietí typu actor--critic. Actor prijíma normalizovaný stav a vracia spojitú akciu, pričom critic odhaduje hodnotu dvojice stav--akcia. Obe siete majú dve plne prepojené skryté vrstvy s aktivačnou funkciou ReLU, pričom po skúmaní a opakovanom skúšaní rôznych konfigurácií bola ako stabilný kompromis medzi presnosťou a náročnosťou zvolená šírka 256 neurónov v každej skrytej vrstve. Actor používa na výstupe funkciu $\tanh$, critic vracia skalárny odhad hodnoty $Q(s,a)$.
+
+Stabilita učenia je podporená tromi mechanizmami: \textit{replay buffer}, cieľovými sieťami actor\_target a critic\_target a riadeným prieskumom akčného priestoru pomocou gaussovského šumu pridávaného k akcii počas tréningu \cite{b14}.
+
+Aktualizácia critica vychádza z Bellmanovej rovnice. Pre cieľovú hodnotu sa používa nasledujúci vzťah
+
+\begin{equation}
+y = r + \gamma (1-d)Q_{\text{target}}\left(s',\mu_{\text{target}}(s')\right),
+\end{equation}
+
+Critic sa učí minimalizovať kvadratickú chybu medzi aktuálnym odhadom $Q(s,a)$ a cieľom $y$. Actor sa učí produkovať akcie maximalizujúce odhadovanú hodnotu kritika. V implementácii sú obe siete optimalizované pomocou algoritmu Adam \cite{b16}.
+
+\subsection{Použité experimentálne nastavenie}
+
+Rovnako ako pri Q-learning experimentoch sa aj pri DDPG zachováva pevná referenčná stratégia, ktorá slúži ako baseline pre neskoršie vyhodnotenie úspor. DDPG agent je trénovaný pre rovnakú množinu reward funkcií ako Q-learning verzia.
+
+Pri hyperparametroch, ktoré majú v DDPG zásadný vplyv na kvalitu učenia, neboli hodnoty prevzaté náhodne, ale zvolené po skúmaní a opakovanom skúšaní viacerých nastavení. Vo finálnej konfigurácii boli použité rýchlosti učenia $10^{-4}$ pre actor a $10^{-3}$ pre critic, diskontný faktor $\gamma = 0.95$, koeficient mäkkej aktualizácie $\tau = 0.005$, minibatch veľkosti 128, replay buffer s kapacitou 100000 prechodov a warmup fáza v dĺžke 1000 krokov. Explorácia počas tréningu využívala gaussovský šum s počiatočnou úrovňou 0.20, ktorý sa po epizódach tlmil faktorom 0.995 až po minimálnu hodnotu 0.03.
+
+Po každej epizóde sa ukladá celkový reward, priemerná strata actor siete, priemerná strata critic siete a aktuálna úroveň prieskumného šumu. Zaznamenáva sa aj odhad momentu stabilizácie učenia založený na porovnaní kĺzavých priemerov rewardu. Pri vyhodnotení naučenej politiky sa ukladajú trajektórie spotreby, kumulatívny reward, agregovaný import a export elektriny a metriky poskytované prostredím CityLearn.
+
+Takto nastavená implementácia zachováva porovnateľnosť s Q-learning vetvou, pretože experimenty používajú rovnaké budovy, rovnaký výber pozorovaní, rovnaké typy reward funkcií a rovnaký spôsob finálnej evaluácie.
+
+\subsection{Charakteristika pristupu}
+
+DDPG umožňuje pracovať so spojitým akčným priestorom bez explicitnej diskretizácie riadených zásahov. V porovnaní s tabuľkovým Q-learningom však ide o prístup citlivejší na nastavenie hyperparametrov, kvalitu reward funkcie a stabilitu tréningu. Pri jeho hodnotení je preto potrebné sledovať nielen finálne KPI, ale aj priebeh učenia naprieč jednotlivými reward variantmi.
+
+\section{Vyhodnotenie a porovnanie pristupov}
+
+Vyhodnotenie bolo realizované voči fixnej stratégii s konštantným nastavením chladenia. Ako základné porovnávacie ukazovatele boli použité celkový import elektriny zo siete, pomerová nákladová metrika \textit{cost\_total} poskytovaná prostredím CityLearn, podiel tepelného diskomfortu a priebeh učenia. Referenčná fixná stratégia dosiahla celkový import 4121.091~kWh pri diskomforte 0.837, voči čomu boli porovnávané všetky reward varianty.
+
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{../CityLearn/outputs_ddpg0305_02/q_learning_vs_ddpg_import_discomfort.png}
+\caption{Porovnanie Q-learning a DDPG reward variantov z pohľadu celkového importu elektriny zo siete a podielu tepelného diskomfortu.}
+\label{fig:q_vs_ddpg_import_discomfort}
+\end{figure*}
+
+
+Pri Q-learning vetve sa potvrdilo, že voľba reward funkcie zásadne mení kompromis medzi úsporou energie a komfortom. Najvyššie úspory dosiahli varianty \textit{Energy-only} a \textit{Storage}, ktoré znížili import na približne 1126~kWh, teda o 72.7~\% oproti fixnej stratégii. Veľmi podobne dopadli aj rewardy \textit{Weather}, \textit{Ramping}, \textit{TimeOfUse} a \textit{SelfSufficiency}, ktoré sa pohybovali približne v intervale 70 až 72~\% úspory. Tieto výsledky však boli dosiahnuté za cenu vysokého diskomfortu, typicky v rozsahu 0.93 až 0.96, teda horšieho než pri fixnej stratégii. Naopak, rewardy \textit{Comfort} a \textit{Combined} dokázali diskomfort znížiť na 0.633, respektíve 0.438, no za cenu výrazne nižšej energetickej úspory 12.3~\% a 28.4~\%. Najslabšie dopadol v Q-learning vetve \textit{Pricing} reward, ktorý pri súčasnom nastavení dosiahol iba 6.35~\% úspory, a teda nepotvrdil očakávanie, že samotná cenová informácia bude postačovať na robustné riadenie.
+
+DDPG vetva vo väčšine energeticky orientovaných rewardov dosiahla ešte nižší import zo siete než Q-learning. Najlepšie výsledky dosiahli varianty \textit{Energy-only}, \textit{Storage}, \textit{Peak-shaving} a \textit{SelfSufficiency}, ktoré znížili import približne na 1054 až 1056~kWh, čo zodpovedá úspore okolo 74.4~\%. Podobne dopadli aj \textit{Weather}, \textit{Ramping} a \textit{TimeOfUse}, všetky so znížením importu približne o 74~\%. Súčasne dosiahli tieto varianty aj najnižšie hodnoty pomerovej metriky \textit{cost\_total}, približne 0.383 až 0.400, teda lepšie než najúspešnejšie Q-learning varianty s minimom okolo 0.415. Cenou za túto výkonnosť bol opäť veľmi vysoký diskomfort, spravidla okolo 0.978, čo indikuje, že agent sa pri týchto rewardoch naučil správanie silne preferujúce minimalizáciu importu bez dostatočnej ochrany komfortu.
+
+Zaujímavejšie výsledky priniesli v DDPG vetve rewardy zamerané na vyváženie viacerých cieľov. \textit{Comfort} reward znížil diskomfort na 0.313 a pritom stále zachoval úsporu 31.5~\%, čím výrazne prekonal Q-learning variant s rovnakou motiváciou. Ešte vyváženejšie sa javil \textit{Combined} reward, ktorý dosiahol najnižší diskomfort spomedzi všetkých skúmaných DDPG nastavení, konkrétne 0.256, pri stále nezanedbateľnej úspore 36.2~\%. To naznačuje, že pri spojitom riadení dokáže DDPG lepšie využiť viacúčelovú reward formuláciu než tabuľkový Q-learning. Zároveň sa ukázalo, že \textit{Pricing} reward bol aj v DDPG menej presvedčivý než energeticky orientované rewardy, hoci stále prekonal svoju Q-learning alternatívu a priniesol približne 38.2~\% úspory pri diskomforte 0.658.
+
+Z priebehov učenia vyplýva ďalší dôležitý rozdiel medzi oboma prístupmi. Q-learning vyžadoval vyšší počet epizód, kým sa priebeh rolling rewardu začal viditeľne stabilizovať, a tento moment bol silne závislý od konkrétnej reward funkcie. Naopak, DDPG vo viacerých reward variantoch vykazoval rýchlejší nárast výkonu už v prvých desiatkach epizód. Formálny odhad stabilizácie použitý v implementácii je zámerne konzervatívny, keďže porovnáva dve po sebe idúce okná rewardu, a preto môže vracať neskorší moment, než aký naznačuje vizuálne posúdenie grafov. Aj napriek tomu však dostupné priebehy naznačujú, že DDPG pri menšom počte tréningových epizód dosahuje konkurencieschopné alebo lepšie energetické výsledky než Q-learning.
+
+Celkové porovnanie preto ukazuje, že medzi sledovanými prístupmi neexistuje jednoznačne najlepšia reward funkcia bez ohľadu na cieľ optimalizácie. Ak je prioritou maximalizácia energetickej úspory a zníženie pomerovej metriky nákladov, najlepšie dopadli energeticky orientované DDPG rewardy. Ak je dôležitá aj udržateľná úroveň komfortu, vhodnejšie sa javia viacúčelové rewardy, najmä \textit{Combined} a \textit{Comfort} v DDPG vetve. Q-learning zostáva zaujímavý svojou jednoduchosťou, interpretovateľnosťou a menšími nárokmi na implementáciu, no pri rozšírenom trojrozmernom akčnom priestore už zaostáva za DDPG v schopnosti nájsť priaznivý kompromis medzi úsporou energie a kvalitou regulácie.
+
+\section{Zaver}
+
+Práca ukázala, že reinforcement learning je použiteľný na riadenie energeticky flexibilnej budovy aj v prostredí s predikovaným počasím, cenou elektriny a informáciou o obsadenosti. Q-learning poskytol funkčný a dobre interpretovateľný základ, no pri rozšírení akčného priestoru sa jeho limity prejavili najmä v horšom kompromise medzi úsporou a komfortom. DDPG naopak potvrdil vhodnosť pre spojité riadenie, keď vo väčšine energeticky orientovaných rewardov dosahoval nižší import aj priaznivejšiu nákladovú metriku než Q-learning.
+
+Zároveň sa ukázalo, že samotná minimalizácia importu nie je dostatočná, ak vedie k neprimeranému zhoršeniu komfortu. Z pohľadu praktickej použiteľnosti sa preto ako najsľubnejšie javia viacúčelové reward funkcie, ktoré zahŕňajú nielen spotrebu energie, ale aj komfort a prípadne ďalšie prevádzkové kritériá. Za najvyváženejšie riešenia možno na základe dostupných výsledkov považovať najmä \textit{Combined} a \textit{Comfort} reward v DDPG vetve, ktoré dosiahli výrazne lepší kompromis medzi úsporou a diskomfortom než väčšina ostatných testovaných variantov.
+
+
+\section*{References}
+
+\begin{thebibliography}{00}
+\bibitem{b1} J. R. Vázquez-Canteli, Z. Nagy, S. Dey, and G. Henze, 
+``CityLearn: Standardizing Research in Multi-Agent Reinforcement Learning for Demand Response and Urban Energy Management,'' 
+The University of Texas at Austin and University of Colorado Boulder.
+\bibitem{b12} C. J. C. H. Watkins and P. Dayan, ``Q-learning,'' Machine Learning, vol. 8, no. 3--4, pp. 279--292, 1992.
+\bibitem{b13} R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction, 2nd ed. Cambridge, MA, USA: MIT Press, 2018.
+\bibitem{b14} T. P. Lillicrap, J. J. Hunt, A. Pritzel, N. Heess, T. Erez, Y. Tassa, D. Silver, and D. Wierstra, ``Continuous control with deep reinforcement learning,'' 2015, arXiv:1509.02971. [Online]. Available: https://arxiv.org/abs/1509.02971
+\bibitem{b15} D. Tang and P. Daoutidis, ``Reinforcement learning for building energy management: A review,'' Current Sustainable/Renewable Energy Reports, vol. 8, pp. 71--84, 2021.
+\bibitem{b16} D. P. Kingma and J. Ba, ``Adam: A method for stochastic optimization,'' 2014, arXiv:1412.6980. [Online]. Available: https://arxiv.org/abs/1412.6980
+\bibitem{b17} D. Deltetto, D. Coraci, G. Pinto, M. S. Piscitelli, and A. Capozzoli, ``Exploring the potentialities of deep reinforcement learning for incentive-based demand response in a cluster of small commercial buildings,'' Energies, vol. 14, no. 10, p. 2933, 2021.
+\bibitem{b18} G. Pinto, M. S. Piscitelli, J. R. V\'{a}zquez-Canteli, Z. Nagy, and A. Capozzoli, ``Coordinated energy management for a cluster of buildings through deep reinforcement learning,'' Energy, vol. 229, p. 120725, 2021.
+\bibitem{b19} A. Kathirgamanathan, K. Twardowski, E. Mangina, and D. P. Finn, ``A Centralised Soft Actor Critic Deep Reinforcement Learning Approach to District Demand Side Management through CityLearn,'' in Proceedings of the 1st International Workshop on Reinforcement Learning for Energy Management in Buildings \& Cities, 2020, pp. 11--14.
+\bibitem{b20} J. R. V\'{a}zquez-Canteli, J. K\"{a}mpf, G. Henze, and Z. Nagy, ``CityLearn v1.0: An OpenAI Gym Environment for Demand Response with Deep Reinforcement Learning,'' in Proceedings of the 6th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation, 2019, pp. 356--357.
+\bibitem{b21} R. Glatt, F. L. da Silva, B. Soper, W. A. Dawson, E. Rusu, and R. A. Goldhahn, ``Collaborative energy demand response with decentralized actor and centralized critic,'' in Proceedings of the 8th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation, 2021, pp. 333--337.
+\bibitem{b22} J. R. Vazquez-Canteli, G. Henze, and Z. Nagy, ``MARLISA: Multi-Agent Reinforcement Learning with Iterative Sequential Action Selection for Load Shaping of Grid-Interactive Connected Buildings,'' in Proceedings of the 7th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation, 2020, pp. 170--179.
+\end{thebibliography}
+
+\end{document}
